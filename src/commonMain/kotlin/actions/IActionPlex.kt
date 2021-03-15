@@ -20,8 +20,10 @@ import conditions.ISimpleConditionable.Companion.Always
 import state.ActionState
 import state.StateAction
 import actions.actionables.IIdlor.Companion.idleParamMoments
+import com.soywiz.klock.DateTime
 import com.soywiz.korio.async.runBlockingNoJs
 import kotlinx.coroutines.coroutineScope
+import time.GlobalTimer
 import kotlin.time.ExperimentalTime
 
 interface IActionPlex {
@@ -265,7 +267,7 @@ suspend fun ActionPlex.perform(moment : Moment, maxPlexSize: Int) {
 }
 
 @ExperimentalUnsignedTypes
-fun ActionPlex.state() : List<String> {
+suspend fun ActionPlex.state() : List<String> {
 
     val returnState = mutableListOf<String>()
 
@@ -274,4 +276,9 @@ fun ActionPlex.state() : List<String> {
     this.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() }).forEach{ returnState.add("${it.first}: ${it.second}") }
 
     return returnState
+}
+
+@ExperimentalUnsignedTypes
+suspend fun ActionPlex.render() {
+    GlobalTimer.renderChannel.send(this)
 }

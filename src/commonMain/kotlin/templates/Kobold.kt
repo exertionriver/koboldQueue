@@ -32,10 +32,17 @@ class Kobold(val id : UUID = UUID.randomUUID(), val kInstanceName : String) : II
         ,"scaly Kobold!" to Probability(30)
     )).getSelectedProbability()!!
 
+    var momentCounter : Int = 0
+
     @ExperimentalCoroutinesApi
     override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        if (registerTimer.getMillisecondsElapsed() % moment.milliseconds == 0L) {
+        val thisMoment = (registerTimer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+
+//        println("$thisMoment, $momentCounter")
+
+        if (thisMoment > momentCounter) {
+            momentCounter = thisMoment
 
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
@@ -70,7 +77,8 @@ class Kobold(val id : UUID = UUID.randomUUID(), val kInstanceName : String) : II
 
 //            println(kInstanceName)
             actionPlex.perform(moment, maxPlexSize)
-//            println(actionPlex.state())
+            actionPlex.render()
+        //            println(actionPlex.state())
         }
 
         return@coroutineScope registerTimer

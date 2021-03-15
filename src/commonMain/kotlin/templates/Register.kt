@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import actions.actionables.IInstantiator.Companion.Instantiate
 import com.soywiz.korio.async.runBlockingNoJs
 import conditions.ISimpleConditionable.Companion.Always
+import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
 
 open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
@@ -37,7 +38,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
     @ExperimentalCoroutinesApi
     fun startInstance(instance : IInstance, register : Register) = runBlockingNoJs {
         GlobalTimer.globalChannel.send("instantiated ${instance.getInstanceName()} in ${register.kInstanceName} ")
-
+        RenderActionPlex.instances.put(instance, RenderActionPlex.instances.size + 1)
         return@runBlockingNoJs
     }
 

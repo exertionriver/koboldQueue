@@ -24,7 +24,12 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
     @ExperimentalCoroutinesApi
     override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        if (registerTimer.getMillisecondsElapsed() % moment.milliseconds == 0L) {
+        val thisMoment = (registerTimer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+
+//        println("$thisMoment, $momentCounter")
+
+        if (thisMoment > momentCounter) {
+            momentCounter = thisMoment
 
             //todo : another list for actions that take two slots
             if (actionPlex.slotsInUse() < maxPlexSize) {
@@ -45,7 +50,8 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
 //            println(kInstanceName)
             actionPlex.perform(moment, maxPlexSize)
-        //    println(actionPlex.state())
+            actionPlex.render()
+            //    println(actionPlex.state())
         }
 
         return@coroutineScope registerTimer
@@ -59,6 +65,8 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
     override val moment = momentDuration
 
+    var momentCounter : Int = 0
+
     override fun getTemplate() = Companion
 
     override fun getInstanceName() = kInstanceName
@@ -69,7 +77,7 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
         override val templateName : String = Cave::class.simpleName!!
 
-        val momentDuration = Moment(1000 * 10) //10 seconds
+        val momentDuration = Moment(1000 * 8) //10 seconds
 
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(

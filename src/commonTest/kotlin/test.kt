@@ -14,6 +14,7 @@ import time.GlobalTimer
 import actions.actionables.IInstantiator
 import actions.actionables.IInstantiator.Companion.Instantiate
 import actions.actionables.IInstantiator.Companion.instantiateParamList
+import com.soywiz.korge.Korge
 import com.soywiz.korio.async.runBlockingNoJs
 import templates.Cave
 import kotlin.test.*
@@ -27,10 +28,11 @@ class MyTest : ViewsForTesting() {
 	@Test
 	fun testPerform() = runBlockingNoJs {
 		val globalReg = Register(kInstanceName = "testGlobalRegister")
+
 		Action.Immediate.execute(action = Instantiate, actionParamList = Instantiate.instantiateParamList(Kobold, "gragg", globalReg) )
 		Action.Immediate.execute(action = Instantiate, actionParamList = Instantiate.instantiateParamList(Kobold, "rrawwr", globalReg) )
 		Action.Immediate.execute(action = Instantiate, actionParamList = Instantiate.instantiateParamList(Cave, "spookyCave", globalReg) )
-		GlobalTimer.perform(globalReg)
+		GlobalTimer.perform(globalRegister = globalReg)
 
 		return@runBlockingNoJs
 	}

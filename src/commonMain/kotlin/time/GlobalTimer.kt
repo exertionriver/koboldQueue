@@ -1,8 +1,11 @@
 package time
 
+import actions.ActionPlex
 import com.soywiz.klock.DateTime
+import com.soywiz.korge.view.Container
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import render.RenderActionPlex.renderActionPlex
 import templates.Register
 import kotlin.time.ExperimentalTime
 
@@ -16,7 +19,8 @@ object GlobalTimer {
     private const val mSecPerceptionDelay = 1000L // 1 sec
 
     val globalChannel = Channel<String>(capacity = 100)
-    val renderChannel = Channel<String>(capacity = 100)
+    @ExperimentalUnsignedTypes
+    val renderChannel = Channel<ActionPlex>(capacity = 100)
     val inputChannel = Channel<String>(capacity = 100)
     val textRenderChannel = Channel<String>(capacity = 100)
     val perceptionChannel = Channel<String>(capacity = 100)
@@ -33,11 +37,15 @@ object GlobalTimer {
         return@coroutineScope newTimer
     }
 
+    @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
-    private suspend fun doRenderQueue() : Timer = coroutineScope {
+    private suspend fun doRenderQueue(globalContainer: Container?) : Timer = coroutineScope {
         val newTimer = Timer()
         while (!renderChannel.isEmpty) {
-            println("render @ ${ DateTime.now() } ${renderChannel.receive()}")
+            if (globalContainer != null) {
+                renderChannel.receive().renderActionPlex(globalContainer)
+            }
+            // else println("render @ ${ DateTime.now() } ${renderChannel.receive()}")
         }
         delay(mSecRenderDelay)
         return@coroutineScope newTimer
@@ -81,7 +89,7 @@ object GlobalTimer {
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     @ExperimentalCoroutinesApi
-    suspend fun perform(globalRegister : Register) = coroutineScope {
+    suspend fun perform(globalContainer : Container? = null, globalRegister : Register) = coroutineScope {
 
         println("starting global timer @ ${DateTime.now()}")
 
@@ -96,7 +104,7 @@ object GlobalTimer {
             }
             launch {
                 while (true) {
-                    doRenderQueue()
+                    doRenderQueue(globalContainer)
                 }
             }
             launch {
