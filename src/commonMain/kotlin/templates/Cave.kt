@@ -44,7 +44,7 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
                     , Destantiate to Probability(40,0)
                 )).getSelectedProbability()!!
                 else
-d                    ProbabilitySelect(mapOf(d
+                    ProbabilitySelect(mapOf(
                         Instantiate to Probability(100,0)
                         , Destantiate to Probability(0,0)
                     )).getSelectedProbability()!!
