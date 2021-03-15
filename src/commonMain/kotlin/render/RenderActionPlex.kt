@@ -44,23 +44,38 @@ object RenderActionPlex {
     }
 
     @ExperimentalUnsignedTypes
+    fun getOpenPosition() : Int {
+        var curPosIdx = 0
+        val sizeIdx = instances.size - 1
+
+        while (curPosIdx <= sizeIdx) {
+
+            if (instances[curPosIdx] == null) return curPosIdx
+
+            curPosIdx++
+        }
+
+        return instances.size
+    }
+
+    @ExperimentalUnsignedTypes
     suspend fun ActionPlex.renderActionPlex() {
 
         val position = Point(50, 50)
 
         container.clear()
 
-        var column = 0
-
         instances.forEach {
-            container.text(it.key.getInstanceName(), font = font, textSize = 20.0, alignment = TextAlignment.BASELINE_LEFT).position(position.x + column++ * 150, position.y)
+            val xPos = position.x + (it.key % 6) * 150
+            val yPos = position.y + (it.key / 6) * 250
+            container.text(it.value.getInstanceName(), font = font, textSize = 20.0, alignment = TextAlignment.BASELINE_LEFT).position(xPos, yPos)
         }
    }
 
 }
 
 @ExperimentalUnsignedTypes
-typealias RenderInstancePositionMap = MutableMap<IInstance, Int>
+typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 
 @ExperimentalUnsignedTypes
 typealias RenderStateActionSlotMap = MutableMap<UUID, Int>

@@ -40,8 +40,8 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
                 val extendedAction = if (koboldInstances.isNotEmpty())
                     ProbabilitySelect(mapOf(
-                    Instantiate to Probability(60,0)
-                    , Destantiate to Probability(40,0)
+                    Instantiate to Probability(80,0)
+                    , Destantiate to Probability(20,0)
                 )).getSelectedProbability()!!
                 else
                     ProbabilitySelect(mapOf(

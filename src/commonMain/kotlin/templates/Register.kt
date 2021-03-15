@@ -40,7 +40,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
     @ExperimentalCoroutinesApi
     fun startInstance(instance : IInstance, register : Register) = runBlockingNoJs {
         GlobalTimer.globalChannel.send("instantiated ${instance.getInstanceName()} in ${register.kInstanceName} ")
-        RenderActionPlex.instances.put(instance, RenderActionPlex.instances.size + 1)
+        RenderActionPlex.instances.put(RenderActionPlex.getOpenPosition(), instance)
         return@runBlockingNoJs
     }
 
@@ -53,7 +53,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
 //        println("actionPlex after cancel: ${entries[kInstance.getInstanceName()]!!.actionPlex.state()}")
         entries.remove(kInstance.getInstanceName())
 //        println("entries after destantiation: $entries")
-        RenderActionPlex.instances.remove(kInstance)
+        RenderActionPlex.instances.remove(RenderActionPlex.instances.filterValues{ it == kInstance }.keys.toList()[0] )
     }
 
     inline fun <reified T : IInstance> getInstance(instanceName : String) : T = entries.filterKeys { it == instanceName && entries[it] is T }.values.toList()[0] as T
