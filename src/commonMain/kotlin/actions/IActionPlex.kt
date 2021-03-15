@@ -91,6 +91,9 @@ fun ActionPlex.isBaseActionRunning(action: Action) : Boolean =
 @ExperimentalUnsignedTypes
 fun ActionPlex.cancelAction(uuid: UUID) = this.remove(uuid)
 
+@ExperimentalUnsignedTypes
+fun ActionPlex.cancelAll() = this.entries.clear()
+
 @ExperimentalTime
 @ExperimentalUnsignedTypes
 fun ActionPlex.checkMomentsPassed(uuid : UUID, moment : Moment) : Int = (getActionTimer(uuid).getMillisecondsElapsed() / moment.milliseconds).toInt()

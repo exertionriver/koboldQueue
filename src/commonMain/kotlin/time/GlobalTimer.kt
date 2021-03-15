@@ -39,12 +39,12 @@ object GlobalTimer {
 
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
-    private suspend fun doRenderQueue(globalContainer: Container?) : Timer = coroutineScope {
+    private suspend fun doRenderQueue() : Timer = coroutineScope {
         val newTimer = Timer()
         while (!renderChannel.isEmpty) {
-            if (globalContainer != null) {
-                renderChannel.receive().renderActionPlex(globalContainer)
-            }
+//            if (globalContainer != null) {
+                renderChannel.receive().renderActionPlex()
+//            }
             // else println("render @ ${ DateTime.now() } ${renderChannel.receive()}")
         }
         delay(mSecRenderDelay)
@@ -89,7 +89,7 @@ object GlobalTimer {
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     @ExperimentalCoroutinesApi
-    suspend fun perform(globalContainer : Container? = null, globalRegister : Register) = coroutineScope {
+    suspend fun perform(globalRegister : Register) = coroutineScope {
 
         println("starting global timer @ ${DateTime.now()}")
 
@@ -104,7 +104,7 @@ object GlobalTimer {
             }
             launch {
                 while (true) {
-                    doRenderQueue(globalContainer)
+                    doRenderQueue()
                 }
             }
             launch {

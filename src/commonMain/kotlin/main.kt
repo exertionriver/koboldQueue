@@ -25,5 +25,6 @@ suspend fun main() = Korge(width = 1024, height = 1024, bgcolor = Colors["#2b2b2
 	Action.Immediate.execute(action = Instantiate, actionParamList = Instantiate.instantiateParamList(Kobold, "gragg", globalReg) )
 	Action.Immediate.execute(action = Instantiate, actionParamList = Instantiate.instantiateParamList(Kobold, "rrawwr", globalReg) )
 
-	GlobalTimer.perform(containerRoot, globalReg)
+	RenderActionPlex.container = containerRoot
+	GlobalTimer.perform(globalReg)
 }

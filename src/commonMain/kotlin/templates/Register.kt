@@ -11,6 +11,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import actions.actionables.IInstantiator.Companion.Instantiate
+import actions.cancelAll
+import actions.state
 import com.soywiz.korio.async.runBlockingNoJs
 import conditions.ISimpleConditionable.Companion.Always
 import render.RenderActionPlex
@@ -42,7 +44,17 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
         return@runBlockingNoJs
     }
 
-    fun removeInstance(kInstanceName : String) = entries.remove(entries.filterKeys { it == kInstanceName }.keys.toList()[0])
+    @ExperimentalUnsignedTypes
+    fun removeInstance(kInstance : IInstance, register : Register) = runBlockingNoJs {
+        GlobalTimer.globalChannel.send("destantiated ${kInstance.getInstanceName()} in ${register.kInstanceName} ")
+//        println("entries before destantiation: $entries")
+//        println("actionPlex before destantiation: ${entries[kInstance.getInstanceName()]!!.actionPlex.state()}")
+        entries[kInstance.getInstanceName()]!!.actionPlex.cancelAll()
+//        println("actionPlex after cancel: ${entries[kInstance.getInstanceName()]!!.actionPlex.state()}")
+        entries.remove(kInstance.getInstanceName())
+//        println("entries after destantiation: $entries")
+        RenderActionPlex.instances.remove(kInstance)
+    }
 
     inline fun <reified T : IInstance> getInstance(instanceName : String) : T = entries.filterKeys { it == instanceName && entries[it] is T }.values.toList()[0] as T
     inline fun <reified T : IInstance> getInstance(instanceIdx : Int) : T = getInstancesOfType<T>()[instanceIdx]

@@ -6,10 +6,14 @@ import actions.param
 import templates.Register
 import conditions.ISimpleConditionable.Companion.Always
 import conditions.ISimpleConditionable.Companion.Never
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import templates.IInstance
 import kotlin.time.ExperimentalTime
 
 interface IInstantiator : IActionable {
 
+    @ExperimentalCoroutinesApi
+    @ExperimentalUnsignedTypes
     @ExperimentalTime
     override val actions : ActionConditionsMap
         get() = super.actions.plus(
@@ -20,6 +24,7 @@ interface IInstantiator : IActionable {
         )
 
     companion object {
+        @ExperimentalCoroutinesApi
         @ExperimentalUnsignedTypes
         @ExperimentalTime
         val Instantiate = Action(action = "instantiate"
@@ -43,23 +48,25 @@ interface IInstantiator : IActionable {
             (" as IInstance named " + (this?.instantiateParamInstanceName() ?: String::class.simpleName ) ) +
             (" in templates.Register " + (this?.instantiateParamRegister()?.kInstanceName ?: Register::class.simpleName ) )
 
+        @ExperimentalUnsignedTypes
         val Destantiate = Action(action = "destantiate"
             , description = null.destantiateDescription()
             , executor = fun (destantiateParamList : ActionParamList?) : String? {
                 try {
                         destantiateParamList!!.destantiateParamRegister().removeInstance(
-                            kInstanceName = destantiateParamList.destantiateParamInstanceName()
+                            kInstance = destantiateParamList.destantiateParamInstance()
+                            , register = destantiateParamList.destantiateParamRegister()
                         )
                         return destantiateParamList.destantiateDescription()
                 } catch(e : Exception) { this.toString() + "exec(${destantiateParamList})" }
                 return null
             }
         )
-        fun Action.destantiateParamList(kInstanceName : String, register : Register) = listOf(kInstanceName, register)
-        private fun ActionParamList.destantiateParamInstanceName() = this.param<String>(0)
+        fun Action.destantiateParamList(kInstance : IInstance, register : Register) = listOf(kInstance, register)
+        private fun ActionParamList.destantiateParamInstance() = this.param<IInstance>(0)
         private fun ActionParamList.destantiateParamRegister() = this.param<Register>(1)
         private fun ActionParamList?.destantiateDescription() : String = "Action.Destantiate -> " +
-            ("Destantiating " + (this?.destantiateParamInstanceName() ?: String::class.simpleName) ) +
+            ("Destantiating " + (this?.destantiateParamInstance()?.getInstanceName() ?: String::class.simpleName) ) +
             (" from templates.Register " + (this?.destantiateParamRegister()?.kInstanceName ?: Register::class.simpleName ) )
     }
 }

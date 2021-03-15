@@ -16,7 +16,17 @@ import templates.IInstance
 
 object RenderActionPlex {
 
+    @ExperimentalUnsignedTypes
     val instances : RenderInstancePositionMap = mutableMapOf()
+
+//    @ExperimentalUnsignedTypes
+//    fun remove(instanceName : String) {
+//        instances.filterKeys { it.getInstanceName() == instanceName }.forEach {instances.remove(it as IInstance)}
+
+//        println("removing instanceName from RenderInstandPositionMap!")
+//    }
+
+    lateinit var container : Container //set this with Korge.rootContainer before running anything
 
     val font = BitmapFont(
         DefaultTtfFont, 64.0,
@@ -34,15 +44,16 @@ object RenderActionPlex {
     }
 
     @ExperimentalUnsignedTypes
-    suspend fun ActionPlex.renderActionPlex(globalContainer: Container) {
+    suspend fun ActionPlex.renderActionPlex() {
+
         val position = Point(50, 50)
 
-        globalContainer.clear()
+        container.clear()
 
         var column = 0
 
         instances.forEach {
-            globalContainer.text(it.key.getInstanceName(), font = font, textSize = 20.0, alignment = TextAlignment.BASELINE_LEFT).position(position.x + column++ * 150, position.y)
+            container.text(it.key.getInstanceName(), font = font, textSize = 20.0, alignment = TextAlignment.BASELINE_LEFT).position(position.x + column++ * 150, position.y)
         }
    }
 
