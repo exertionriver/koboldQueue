@@ -20,6 +20,8 @@ import conditions.ProbabilitySelect
 import actions.actionables.IIdlor.Companion.idleParamList
 import actions.actionables.IInstantiable
 import actions.actionables.IObservable
+import com.soywiz.klock.DateTime
+import time.GlobalTimer
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -32,17 +34,19 @@ class Kobold(val id : UUID = UUID.randomUUID(), val kInstanceName : String) : II
         ,"scaly Kobold!" to Probability(30)
     )).getSelectedProbability()!!
 
-    var momentCounter : Int = 0
+
+    var momentCounter = 0
 
     @ExperimentalCoroutinesApi
-    override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
+    override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        val thisMoment = (registerTimer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+        val checkTimer = Timer()
 
-//        println("$thisMoment, $momentCounter")
+        if (timer.getMillisecondsElapsed() / moment.milliseconds > momentCounter) {
 
-        if (thisMoment > momentCounter) {
-            momentCounter = thisMoment
+            println("Kobold $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()}, $momentCounter")
+
+            momentCounter = (timer.getMillisecondsElapsed() / moment.milliseconds).toInt()
 
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
@@ -51,7 +55,7 @@ class Kobold(val id : UUID = UUID.randomUUID(), val kInstanceName : String) : II
                         Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.reflectParamList(kInstanceName) )
                         else -> actionPlex.startAction(it.key, ActionPriority.BaseAction)
                     }
-                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
+//                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
                 }
             }
 
@@ -72,16 +76,17 @@ class Kobold(val id : UUID = UUID.randomUUID(), val kInstanceName : String) : II
 
                 actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)
 
-                println("extended action started: ${extendedAction.action} by $kInstanceName at $registerTimer" )
+//                println("extended action started: ${extendedAction.action} by $kInstanceName at $registerTimer" )
             }
-
-//            println(kInstanceName)
             actionPlex.perform(moment, maxPlexSize)
-            actionPlex.render()
-        //            println(actionPlex.state())
-        }
 
-        return@coroutineScope registerTimer
+            println("Kobold $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+
+            return@coroutineScope Timer()
+        } else delay(GlobalTimer.mSecRenderDelay)
+
+        println("Kobold $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+        return@coroutineScope timer
     }
 
     override val actionPlex: ActionPlex = mutableMapOf()

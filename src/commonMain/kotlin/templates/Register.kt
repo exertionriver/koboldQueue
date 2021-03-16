@@ -7,20 +7,23 @@ import actions.ActionPlex
 import actions.actionables.IInstantiable
 import actions.actionables.IInstantiator
 import com.soywiz.korio.util.UUID
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import actions.actionables.IInstantiator.Companion.Instantiate
+import actions.cancelAction
 import actions.cancelAll
-import actions.state
-import com.soywiz.korio.async.runBlockingNoJs
+import actions.stateString
+import com.soywiz.klock.DateTime
 import conditions.ISimpleConditionable.Companion.Always
+import kotlinx.coroutines.*
 import render.RenderActionPlex
+import time.GlobalTimer.mSecPerceptionDelay
+import time.GlobalTimer.mSecRenderDelay
 import kotlin.time.ExperimentalTime
 
 open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
 
     val entries = mutableMapOf<String, IInstance>()
+
+ //   fun getEntries() = entries.toMap()
 
     @ExperimentalUnsignedTypes
     override val actionPlex: ActionPlex = mutableMapOf()
@@ -38,22 +41,25 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     @ExperimentalCoroutinesApi
-    fun startInstance(instance : IInstance, register : Register) = runBlockingNoJs {
-        GlobalTimer.globalChannel.send("instantiated ${instance.getInstanceName()} in ${register.kInstanceName} ")
+    fun startInstance(instance : IInstance, register : Register) {
+
+        //GlobalTimer.globalChannel.send("instantiated ${instance.getInstanceName()} in ${register.kInstanceName} ")
         RenderActionPlex.instances.put(RenderActionPlex.getOpenPosition(), instance)
-        return@runBlockingNoJs
+//        instance.actionPlex.render()
     }
 
     @ExperimentalUnsignedTypes
-    fun removeInstance(kInstance : IInstance, register : Register) = runBlockingNoJs {
-        GlobalTimer.globalChannel.send("destantiated ${kInstance.getInstanceName()} in ${register.kInstanceName} ")
-//        println("entries before destantiation: $entries")
-//        println("actionPlex before destantiation: ${entries[kInstance.getInstanceName()]!!.actionPlex.state()}")
+    fun removeInstance(kInstance : IInstance, register : Register) {
+//        GlobalTimer.globalChannel.send("destantiated ${kInstance.getInstanceName()} in ${register.kInstanceName} ")
+        println("entries before destantiation: $entries")
+        println("actionPlex before destantiation: ${entries[kInstance.getInstanceName()]!!.actionPlex.stateString()}")
         entries[kInstance.getInstanceName()]!!.actionPlex.cancelAll()
-//        println("actionPlex after cancel: ${entries[kInstance.getInstanceName()]!!.actionPlex.state()}")
+        println("actionPlex after cancel: ${entries[kInstance.getInstanceName()]!!.actionPlex.stateString()}")
         entries.remove(kInstance.getInstanceName())
-//        println("entries after destantiation: $entries")
-        RenderActionPlex.instances.remove(RenderActionPlex.instances.filterValues{ it == kInstance }.keys.toList()[0] )
+//        iterator() ; while (removeIter.hasNext()) if (removeIter.next().key == kInstanceName) removeIter.remove()
+        println("entries after destantiation: $entries")
+//        val removeRenderIter = RenderActionPlex.instances.iterator() ; while (removeRenderIter.hasNext()) if (removeRenderIter.next().value == kInstance) removeIter.remove()
+        RenderActionPlex.removeInstance(kInstance)
     }
 
     inline fun <reified T : IInstance> getInstance(instanceName : String) : T = entries.filterKeys { it == instanceName && entries[it] is T }.values.toList()[0] as T
@@ -66,19 +72,24 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
     @ExperimentalCoroutinesApi
     @ExperimentalUnsignedTypes
     @ExperimentalTime
-    override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer {
+    override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        coroutineScope {
-            for (instance in instanceRegister.entries.values) {
-                launch {
-                    instance.perform(registerTimer, instanceRegister)
+        if (registerTimer.getMillisecondsElapsed() >= mSecRenderDelay) {
+            println("register @ ${ DateTime.now() } GT:${registerTimer.getMillisecondsElapsed()}")
+
+            coroutineScope {
+                for (entry in entries.toMap()) {
+                    var instanceTimer = entry.value.perform(registerTimer, instanceRegister)
+                    launch {
+                        instanceTimer = entry.value.perform(instanceTimer, instanceRegister)
+                    }
                 }
             }
 
-        return@coroutineScope
+            return@coroutineScope Timer()
         }
-
-        return registerTimer
+        delay(mSecRenderDelay - registerTimer.getMillisecondsElapsed())
+        return@coroutineScope registerTimer
     }
 
     override val moment = momentDuration
@@ -95,6 +106,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
 
         val momentDuration = Moment.Immediate //milliseconds
 
+        @ExperimentalCoroutinesApi
         @ExperimentalUnsignedTypes
         @ExperimentalTime
         override val actions: ActionConditionsMap

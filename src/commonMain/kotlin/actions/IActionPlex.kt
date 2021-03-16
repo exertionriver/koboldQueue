@@ -20,10 +20,10 @@ import conditions.ISimpleConditionable.Companion.Always
 import state.ActionState
 import state.StateAction
 import actions.actionables.IIdlor.Companion.idleParamMoments
-import com.soywiz.klock.DateTime
-import com.soywiz.korio.async.runBlockingNoJs
-import kotlinx.coroutines.coroutineScope
-import time.GlobalTimer
+import com.soywiz.korma.geom.bezier.SegmentEmitter.emit
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import state.State
 import kotlin.time.ExperimentalTime
 
 interface IActionPlex {
@@ -89,10 +89,12 @@ fun ActionPlex.isBaseActionRunning(action: Action) : Boolean =
     this.filterValues { it.action.action == action.action && it.actionPriority == BaseAction }.isNotEmpty()
 
 @ExperimentalUnsignedTypes
+//fun ActionPlex.cancelAction(uuid: UUID) { val removeIter = this.iterator() ; while (removeIter.hasNext()) if (removeIter.next().key == uuid) removeIter.remove() }
 fun ActionPlex.cancelAction(uuid: UUID) = this.remove(uuid)
 
 @ExperimentalUnsignedTypes
-fun ActionPlex.cancelAll() = this.entries.clear()
+//fun ActionPlex.cancelAll() { val removeIter = this.iterator() ; while (removeIter.hasNext()) removeIter.remove() }
+fun ActionPlex.cancelAll() = this.clear()
 
 @ExperimentalTime
 @ExperimentalUnsignedTypes
@@ -270,7 +272,7 @@ suspend fun ActionPlex.perform(moment : Moment, maxPlexSize: Int) {
 }
 
 @ExperimentalUnsignedTypes
-suspend fun ActionPlex.state() : List<String> {
+fun ActionPlex.stateString() : List<String> {
 
     val returnState = mutableListOf<String>()
 
@@ -281,7 +283,3 @@ suspend fun ActionPlex.state() : List<String> {
     return returnState
 }
 
-@ExperimentalUnsignedTypes
-suspend fun ActionPlex.render() {
-    GlobalTimer.renderChannel.send(this)
-}

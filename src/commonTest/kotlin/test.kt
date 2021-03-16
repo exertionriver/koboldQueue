@@ -5,7 +5,6 @@ import com.soywiz.korge.tests.*
 import com.soywiz.korge.tween.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
-import com.soywiz.korio.async.runBlockingNoSuspensions
 import com.soywiz.korma.geom.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import templates.Kobold

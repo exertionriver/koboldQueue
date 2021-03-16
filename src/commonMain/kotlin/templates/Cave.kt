@@ -16,6 +16,9 @@ import conditions.Probability
 import conditions.ProbabilitySelect
 import actions.actionables.IInstantiator.Companion.instantiateParamList
 import actions.actionables.IObservable
+import com.soywiz.klock.DateTime
+import kotlinx.coroutines.delay
+import time.GlobalTimer
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
@@ -23,15 +26,18 @@ import kotlin.time.ExperimentalTime
 @ExperimentalUnsignedTypes
 class Cave(val kInstanceName: String) : IInstance, IObservable {
 
+    var momentCounter = 0
+
     @ExperimentalCoroutinesApi
-    override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
+    override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        val thisMoment = (registerTimer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+        val checkTimer = Timer()
 
-//        println("$thisMoment, $momentCounter")
+        if (timer.getMillisecondsElapsed() / moment.milliseconds > momentCounter) {
 
-        if (thisMoment > momentCounter) {
-            momentCounter = thisMoment
+            println("Cave $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()} $momentCounter")
+
+            momentCounter = (timer.getMillisecondsElapsed() / moment.milliseconds).toInt()
 
             //todo : another list for actions that take two slots
             if (actionPlex.slotsInUse() < maxPlexSize) {
@@ -39,10 +45,16 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
                 val koboldInstances = instanceRegister.getInstancesOfType<Kobold>()
 
                 val extendedAction = if (koboldInstances.isNotEmpty())
-                    ProbabilitySelect(mapOf(
-                    Instantiate to Probability(80,0)
-                    , Destantiate to Probability(20,0)
-                )).getSelectedProbability()!!
+                    if (koboldInstances.size > 2)
+                        ProbabilitySelect(mapOf(
+                            Instantiate to Probability(0,0)
+                            , Destantiate to Probability(100,0)
+                        )).getSelectedProbability()!!
+                    else
+                        ProbabilitySelect(mapOf(
+                            Instantiate to Probability(80,0)
+                            , Destantiate to Probability(20,0)
+                        )).getSelectedProbability()!!
                 else
                     ProbabilitySelect(mapOf(
                         Instantiate to Probability(100,0)
@@ -56,17 +68,20 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
                 }
 
                 actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)
-                println("extended action started: ${extendedAction.action} by $kInstanceName at $registerTimer" )
-
+//                println("extended action started: ${extendedAction.action} by $kInstanceName at $timer" )
             }
 
-//            println(kInstanceName)
             actionPlex.perform(moment, maxPlexSize)
-            actionPlex.render()
-            //    println(actionPlex.state())
-        }
 
-        return@coroutineScope registerTimer
+            println("Cave $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+
+            return@coroutineScope Timer()
+
+        } else delay(GlobalTimer.mSecRenderDelay)
+
+        println("Kobold $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+
+        return@coroutineScope timer
     }
 
     override fun getDescription(): String = "spooky cave!"
@@ -76,8 +91,6 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
     override val maxPlexSize: Int = 1
 
     override val moment = momentDuration
-
-    var momentCounter : Int = 0
 
     override fun getTemplate() = Companion
 
@@ -89,7 +102,7 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
         override val templateName : String = Cave::class.simpleName!!
 
-        val momentDuration = Moment(1000) //10 seconds
+        val momentDuration = Moment(1000 * 5) //10 seconds
 
         @ExperimentalCoroutinesApi
         override val actions: ActionConditionsMap

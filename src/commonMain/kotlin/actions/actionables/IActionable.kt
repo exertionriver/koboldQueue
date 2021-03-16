@@ -39,7 +39,8 @@ interface IActionable : ISimpleConditionable {
         //evaluate conditionParameters if they exist; if these evaluate to true, run action
         if ( conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() ) {
 
-            GlobalTimer.perceptionChannel.send("exec return @ ${ DateTime.now() } ${action.executor(actionParamList)}")
+            action.executor(actionParamList)
+//            GlobalTimer.globalChannel.send("exec return @ ${ DateTime.now() } ${action.executor(actionParamList)}")
         }
 
         return@coroutineScope

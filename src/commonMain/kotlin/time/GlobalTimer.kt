@@ -1,134 +1,56 @@
 package time
 
-import actions.ActionPlex
 import com.soywiz.klock.DateTime
-import com.soywiz.korge.view.Container
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import render.RenderActionPlex.renderActionPlex
+import render.RenderActionPlex
 import templates.Register
 import kotlin.time.ExperimentalTime
 
 object GlobalTimer {
 
     @ExperimentalCoroutinesApi
-    private const val mSecGlobalDelay = 1L // 1/1000th of a sec
-    private const val mSecRenderDelay = 17L // 1/60th of sec
-    private const val mSecInputDelay = 62L // 1/16th of sec
-    private const val mSecTextRenderDelay = 62L // 1/16th of sec
-    private const val mSecPerceptionDelay = 1000L // 1 sec
+    const val mSecRenderDelay = 17L // 1/60th of sec
+    const val mSecPerceptionDelay = 1000L // 1 sec
 
-    val globalChannel = Channel<String>(capacity = 100)
-    @ExperimentalUnsignedTypes
-    val renderChannel = Channel<ActionPlex>(capacity = 100)
-    val inputChannel = Channel<String>(capacity = 100)
-    val textRenderChannel = Channel<String>(capacity = 100)
-    val perceptionChannel = Channel<String>(capacity = 100)
-
-    @ExperimentalCoroutinesApi
-    @ExperimentalUnsignedTypes
     @ExperimentalTime
-    private suspend fun doGlobalQueue() : Timer = coroutineScope {
-        val newTimer = Timer()
-        while (!globalChannel.isEmpty) {
-            println("global @ ${ DateTime.now() } ${globalChannel.receive()}")
-        }
-        delay(mSecGlobalDelay)
-        return@coroutineScope newTimer
-    }
-
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
-    private suspend fun doRenderQueue() : Timer = coroutineScope {
-        val newTimer = Timer()
-        while (!renderChannel.isEmpty) {
-//            if (globalContainer != null) {
-                renderChannel.receive().renderActionPlex()
-//            }
-            // else println("render @ ${ DateTime.now() } ${renderChannel.receive()}")
-        }
-        delay(mSecRenderDelay)
-        return@coroutineScope newTimer
-    }
+    suspend fun doRenderQueue(timer : Timer) : Timer = coroutineScope {
 
-    @ExperimentalCoroutinesApi
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    private suspend fun doInputQueue(globalRegister: Register) : Timer = coroutineScope {
-        val newTimer = Timer()
+        if (timer.getMillisecondsElapsed() >= mSecRenderDelay) {
+        //    println("render @ ${DateTime.now()} RT:${timer.getMillisecondsElapsed()}")
 
-        while (!inputChannel.isEmpty) {
-            println("input @ ${ DateTime.now() } ${inputChannel.receive()}")
-        }
-        delay(mSecInputDelay)
-        return@coroutineScope newTimer
-    }
+            return@coroutineScope withContext(Dispatchers.Unconfined) {
+                RenderActionPlex.perform(timer)
+            }
+        } else delay(mSecRenderDelay)
 
-    @ExperimentalCoroutinesApi
-    private suspend fun doTextRenderQueue() : Timer = coroutineScope {
-        val newTimer = Timer()
-        while (!textRenderChannel.isEmpty) {
-            println("textRender @ ${ DateTime.now() } ${textRenderChannel.receive()}")
-        }
-        delay(mSecTextRenderDelay)
-        return@coroutineScope newTimer
-    }
-
-    @ExperimentalCoroutinesApi
-    @ExperimentalTime
-    private suspend fun doPerceptionQueue(timer : Timer) : Timer = coroutineScope {
-        val newTimer = Timer()
-        println("perception @ ${ DateTime.now() } PT:${timer.getMillisecondsElapsed()}")
-        while (!perceptionChannel.isEmpty) {
-            println("perception @ ${ DateTime.now() } ${perceptionChannel.receive()}")
-        }
-        delay(mSecPerceptionDelay)
-        return@coroutineScope newTimer
+        return@coroutineScope timer
     }
 
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     @ExperimentalCoroutinesApi
-    suspend fun perform(globalRegister : Register) = coroutineScope {
+    suspend fun perform(globalRegister : Register) {
 
         println("starting global timer @ ${DateTime.now()}")
 
-        var perceptionTimer = Timer()
+        var renderTimer = Timer()
         var globalRegTimer = Timer()
 
-        coroutineScope {
-            launch {
-                while (true) {
-                    doGlobalQueue()
-                }
-            }
-            launch {
-                while (true) {
-                    doRenderQueue()
-                }
-            }
-            launch {
-                while (true) {
-                    doInputQueue(globalRegister)
-                }
-            }
-            launch {
-                while (true) {
-                    doTextRenderQueue()
-                }
-            }
-            launch {
-                while (true) {
-                    perceptionTimer = doPerceptionQueue(perceptionTimer)
-                }
-            }
-            launch {
-                while (true) {
-                    globalRegTimer = globalRegister.perform(globalRegTimer, globalRegister)
-                }
+        val coroutineScope = CoroutineScope(Dispatchers.Unconfined)
+
+        while (true) {
+            renderTimer = withContext(coroutineScope.coroutineContext) { doRenderQueue(renderTimer) }
+
+            for (entry in globalRegister.entries.toMap()) {
+               // println("GlobalTimer @ ${DateTime.now()} RT:${globalRegTimer.getMillisecondsElapsed()}")
+
+                var instanceTimer = globalRegTimer
+                instanceTimer =
+                    withContext(coroutineScope.coroutineContext) { entry.value.perform(globalRegTimer, globalRegister) }
             }
         }
 
-    return@coroutineScope
     }
 }
