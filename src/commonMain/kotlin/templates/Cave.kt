@@ -85,7 +85,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                 RenderActionPlex.render(id, actionPlex.toMap())
                 delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
 
-                println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} $moment.milliseconds")
+                println("Cave $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${moment.milliseconds}")
 
 
       //      println("Cave $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
