@@ -5,7 +5,11 @@ import kotlinx.coroutines.coroutineScope
 import actions.ActionPriority.Companion.MediumSecond
 import actions.ActionType.Companion.OneTimeExec
 import actions.actionables.IActionable
+import com.soywiz.korio.util.UUID
 import conditions.ConditionParamMap
+import state.StateAction
+import templates.Moment
+import time.Timer
 import kotlin.time.ExperimentalTime
 
 class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToExecute : Int = 1, val momentsToRecover : Int = 1, val plexSlotsRequired : Int = 1,
@@ -49,6 +53,31 @@ class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToE
     }
 
     override fun toString() = "${Action::class.simpleName}($action, $momentsToPrepare, $momentsToExecute, $momentsToRecover, $plexSlotsRequired, $actionType, $actionPriority, $description, executor())"
+
+    companion object {
+
+        @ExperimentalCoroutinesApi
+        @ExperimentalTime
+        @ExperimentalUnsignedTypes
+        suspend fun perform(actionPlex : ActionPlex, moment : Moment, maxPlexSize: Int) : ActionPlex = coroutineScope {
+
+  //          val checkTimer = Timer()
+
+            actionPlex.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() }).forEach{
+    //        println(it.first)
+                when {
+                    actionPlex.isActionQueued(it.first, moment) -> actionPlex.prepareAction(it.first, maxPlexSize)
+                    actionPlex.isActionPrepared(it.first, moment) -> actionPlex.executeAction(it.first)
+                    actionPlex.isActionExecuted(it.first, moment) -> actionPlex.recoverAction(it.first)
+                    actionPlex.isActionRecovered(it.first, moment) -> actionPlex.queueAction(it.first)
+                }
+            }
+
+//            println("ActionPlex checktimer: ${checkTimer.getMillisecondsElapsed()}")
+
+            return@coroutineScope actionPlex
+        }
+    }
 }
 
 typealias ActionParamList = List<Any>

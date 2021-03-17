@@ -21,6 +21,7 @@ import state.ActionState
 import state.StateAction
 import actions.actionables.IIdlor.Companion.idleParamMoments
 import com.soywiz.korma.geom.bezier.SegmentEmitter.emit
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import state.State
@@ -38,6 +39,9 @@ interface IActionPlex {
 
 @ExperimentalUnsignedTypes
 typealias ActionPlex = MutableMap<UUID, StateAction> //slots to StateActions, max of maxPlexSize
+
+typealias ImActionPlex = Map<UUID, StateAction> //slots to StateActions, max of maxPlexSize
+
 
 @ExperimentalUnsignedTypes
 fun ActionPlex.slotsInUse() : Int {
@@ -253,22 +257,6 @@ fun ActionPlex.preempt(uuid: UUID, maxPlexSize: Int) : Boolean {
     }
 
     return false
-}
-
-@ExperimentalCoroutinesApi
-@ExperimentalTime
-@ExperimentalUnsignedTypes
-suspend fun ActionPlex.perform(moment : Moment, maxPlexSize: Int) {
-
-    this.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() }).forEach{
-//        println(it.first)
-        when {
-            isActionQueued(it.first, moment) -> this.prepareAction(it.first, maxPlexSize)
-            isActionPrepared(it.first, moment) -> this.executeAction(it.first)
-            isActionExecuted(it.first, moment) -> this.recoverAction(it.first)
-            isActionRecovered(it.first, moment) -> this.queueAction(it.first)
-        }
-    }
 }
 
 @ExperimentalUnsignedTypes

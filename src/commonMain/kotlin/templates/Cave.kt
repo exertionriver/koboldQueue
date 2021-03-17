@@ -5,8 +5,6 @@ import actions.actionables.ActionConditionsMap
 import actions.actionables.IInstantiable
 import actions.actionables.IInstantiator
 import actions.actionables.IInstantiator.Companion.Destantiate
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
 import templates.*
 import time.Timer
 import actions.actionables.IInstantiator.Companion.Instantiate
@@ -17,35 +15,47 @@ import conditions.ProbabilitySelect
 import actions.actionables.IInstantiator.Companion.instantiateParamList
 import actions.actionables.IObservable
 import com.soywiz.klock.DateTime
-import kotlinx.coroutines.delay
+import com.soywiz.korio.util.UUID
+import kotlinx.coroutines.*
+import render.RenderActionPlex
 import time.GlobalTimer
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @ExperimentalUnsignedTypes
-class Cave(val kInstanceName: String) : IInstance, IObservable {
+class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName: String) : IInstance, IObservable {
 
     var momentCounter = 0
+
+    lateinit var entries : RegisterEntries
 
     @ExperimentalCoroutinesApi
     override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
         val checkTimer = Timer()
 
-        if (timer.getMillisecondsElapsed() / moment.milliseconds > momentCounter) {
+   //     if (timer.getMillisecondsElapsed() / moment.milliseconds > momentCounter) {
 
-            println("Cave $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()} $momentCounter")
+//            println("Cave $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()} $momentCounter")
+
+            while (!registerChannel.isEmpty) {
+                val regData = registerChannel.receive()
+
+                if (regData.first == instanceRegister.id) entries = regData.second.toMutableMap()
+            }
 
             momentCounter = (timer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+
+            if (momentCounter % 5 == 0) {
 
             //todo : another list for actions that take two slots
             if (actionPlex.slotsInUse() < maxPlexSize) {
 
-                val koboldInstances = instanceRegister.getInstancesOfType<Kobold>()
+                val koboldInstances = entries.filterKeys { it is Kobold }.keys.toList() as List<Kobold>
 
                 val extendedAction = if (koboldInstances.isNotEmpty())
-                    if (koboldInstances.size > 2)
+                    if (koboldInstances.size > 8)
                         ProbabilitySelect(mapOf(
                             Instantiate to Probability(0,0)
                             , Destantiate to Probability(100,0)
@@ -71,22 +81,30 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 //                println("extended action started: ${extendedAction.action} by $kInstanceName at $timer" )
             }
 
-            actionPlex.perform(moment, maxPlexSize)
+                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
+                RenderActionPlex.render(id, actionPlex.toMap())
+                delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
 
-            println("Cave $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+                println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} $moment.milliseconds")
+
+
+      //      println("Cave $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+            }
+
+//        delay(GlobalTimer.mSecRenderDelay)
 
             return@coroutineScope Timer()
 
-        } else delay(GlobalTimer.mSecRenderDelay)
+ //       } //else
 
-        println("Kobold $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+  //      println("Kobold $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
 
-        return@coroutineScope timer
+   //     return@coroutineScope timer
     }
 
     override fun getDescription(): String = "spooky cave!"
 
-    override val actionPlex: ActionPlex = mutableMapOf()
+    override var actionPlex: ActionPlex = mutableMapOf()
 
     override val maxPlexSize: Int = 1
 
@@ -94,15 +112,17 @@ class Cave(val kInstanceName: String) : IInstance, IObservable {
 
     override fun getTemplate() = Companion
 
+    override fun getInstanceId() = id
+
     override fun getInstanceName() = kInstanceName
 
     companion object : IInstantiable, IInstantiator {
 
-        override fun getInstance(kInstanceName: String) = Cave(kInstanceName)
+        override fun getInstance(kInstanceName: String) = Cave(kInstanceName = kInstanceName)
 
         override val templateName : String = Cave::class.simpleName!!
 
-        val momentDuration = Moment(1000 * 5) //10 seconds
+        val momentDuration = Moment(500)
 
         @ExperimentalCoroutinesApi
         override val actions: ActionConditionsMap

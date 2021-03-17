@@ -4,6 +4,7 @@ import actions.Action
 import actions.ActionParamList
 import actions.ActionType.Companion.OneTimeExec
 import actions.param
+import templates.IInstance
 import templates.Register
 import kotlin.time.ExperimentalTime
 
@@ -27,7 +28,7 @@ interface IObservor : IActionable {
             , executor = fun (lookParams : ActionParamList?) : String? {
                 try {
                     val lookObjects = lookParams!!.lookParamRegister().entries
-                        .filterValues { (it is IObservable) && (it.getInstanceName() != lookParams.lookParamInstanceName()) }
+                        .filterValues { (it is IInstance) && (it is IObservable) && (it.getInstanceName() != lookParams.lookParamInstanceName()) }
 
                     return if (!lookObjects.isNullOrEmpty() )
                         lookParams.lookDescription().plus(": " +

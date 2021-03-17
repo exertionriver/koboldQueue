@@ -2,10 +2,14 @@ package templates
 
 import actions.ActionPlex
 import actions.IActionPlex
+import com.soywiz.korio.util.UUID
 import time.Timer
 import kotlin.time.ExperimentalTime
 
 interface IInstance : IActionPlex {
+
+    fun getInstanceId(): UUID
+
     fun getInstanceName(): String
 
     @ExperimentalUnsignedTypes
