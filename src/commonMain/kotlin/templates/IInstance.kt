@@ -1,7 +1,7 @@
 package templates
 
-import actions.ActionPlex
-import actions.IActionPlex
+import action.ActionPlex
+import action.IActionPlex
 import com.soywiz.korio.util.UUID
 import time.Timer
 import kotlin.time.ExperimentalTime

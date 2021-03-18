@@ -1,11 +1,11 @@
-package conditions
+package condition
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
 open class Condition(val condition : String, val description : String, val evaluator : (conditionParams : ConditionParamList?) -> Boolean) {
 
-    object Immediate : IConditionable {
+    object Immediate : ICondition {
         @ExperimentalCoroutinesApi
         @ExperimentalTime
         @ExperimentalUnsignedTypes

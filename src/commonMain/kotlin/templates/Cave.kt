@@ -1,24 +1,20 @@
 package templates
 
-import actions.*
-import actions.actionables.ActionConditionsMap
-import actions.actionables.IInstantiable
-import actions.actionables.IInstantiator
-import actions.actionables.IInstantiator.Companion.Destantiate
+import action.*
+import action.ActionConditionsMap
+import action.actions.Destantiate
+import action.actions.Instantiate
+import action.roles.IInstantiable
+import action.roles.IInstantiator
 import templates.*
 import time.Timer
-import actions.actionables.IInstantiator.Companion.Instantiate
-import actions.actionables.IInstantiator.Companion.destantiateParamList
-import conditions.ISimpleConditionable
-import conditions.Probability
-import conditions.ProbabilitySelect
-import actions.actionables.IInstantiator.Companion.instantiateParamList
-import actions.actionables.IObservable
-import com.soywiz.klock.DateTime
+import condition.ISimpleCondition
+import condition.Probability
+import condition.ProbabilitySelect
+import action.roles.IObservable
 import com.soywiz.korio.util.UUID
 import kotlinx.coroutines.*
 import render.RenderActionPlex
-import time.GlobalTimer
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
@@ -72,8 +68,8 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                     )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Instantiate -> Instantiate.instantiateParamList(Kobold, "krakka${Random.nextInt(256)}", instanceRegister)
-                    Destantiate -> Destantiate.destantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister)
+                    Instantiate -> Instantiate.InstantiateParamList(Kobold, "krakka${Random.nextInt(256)}", instanceRegister).actionParamList()
+                    Destantiate -> Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
@@ -82,7 +78,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
             }
 
                 actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
-                RenderActionPlex.render(id, actionPlex.toMap())
+                RenderActionPlex.render(id, moment, actionPlex.getImMap())
                 delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
 
                 println("Cave $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${moment.milliseconds}")
@@ -122,13 +118,13 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
         override val templateName : String = Cave::class.simpleName!!
 
-        val momentDuration = Moment(500)
+        val momentDuration = Moment(500*4)
 
         @ExperimentalCoroutinesApi
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(
                 super.actions,
-                modMap = mapOf(Instantiate to listOf(ISimpleConditionable.Always))
+                modMap = mapOf(Instantiate to listOf(ISimpleCondition.Always))
             )
 
     }

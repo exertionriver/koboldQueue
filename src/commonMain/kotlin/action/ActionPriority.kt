@@ -1,4 +1,4 @@
-package actions
+package action
 
 class ActionPriority(val priority: String, val valueClass : Int, val valueInClass : Int ) : Comparable<ActionPriority> {
 

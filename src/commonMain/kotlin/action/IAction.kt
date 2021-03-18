@@ -1,19 +1,15 @@
-package actions.actionables
+package action
 
-import actions.Action
-import actions.ActionParamList
-import com.soywiz.klock.DateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
-import time.GlobalTimer
-import conditions.ConditionList
-import conditions.ConditionParamMap
-import conditions.ISimpleConditionable
-import conditions.ISimpleConditionable.Companion.Always
-import conditions.evaluate
+import condition.ConditionList
+import condition.ConditionParamMap
+import condition.ISimpleCondition
+import condition.ISimpleCondition.Companion.Always
+import condition.evaluate
 import kotlin.time.ExperimentalTime
 
-interface IActionable : ISimpleConditionable {
+interface IAction : ISimpleCondition {
     //used to associate actions with conditions for templates
 
     @ExperimentalTime
@@ -40,7 +36,8 @@ interface IActionable : ISimpleConditionable {
         if ( conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() ) {
 
             action.executor(actionParamList)
-//            GlobalTimer.globalChannel.send("exec return @ ${ DateTime.now() } ${action.executor(actionParamList)}")
+
+ //           GlobalChannel.logInfoChannel.send("exec return @ ${ DateTime.now() } ${action.executor(actionParamList)}")
         }
 
         return@coroutineScope

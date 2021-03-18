@@ -1,4 +1,4 @@
-package actions
+package action
 
 class ActionType(val type: String) {
 

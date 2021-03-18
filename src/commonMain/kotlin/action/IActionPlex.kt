@@ -1,7 +1,7 @@
-package actions
+package action
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import actions.ActionPriority.Companion.BaseAction
+import action.ActionPriority.Companion.BaseAction
 import state.ActionState.Companion.ActionExecute
 import state.ActionState.Companion.ActionNotFound
 import state.ActionState.Companion.ActionPrepare
@@ -10,21 +10,15 @@ import state.ActionState.Companion.ActionRecover
 import state.ActionState.Companion.InProcess
 import state.ActionState.Companion.Interruptable
 import state.ActionState.Companion.Preemptable
-import actions.ActionType.Companion.Continual
+import action.ActionType.Companion.Continual
+import action.actions.Idle
 import com.soywiz.korio.util.UUID
 import templates.Moment
 import time.Timer
-import actions.actionables.IIdlor.Companion.Idle
-import conditions.ConditionParamMap
-import conditions.ISimpleConditionable.Companion.Always
+import condition.ConditionParamMap
+import condition.ISimpleCondition.Companion.Always
 import state.ActionState
-import state.StateAction
-import actions.actionables.IIdlor.Companion.idleParamMoments
-import com.soywiz.korma.geom.bezier.SegmentEmitter.emit
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import state.State
+
 import kotlin.time.ExperimentalTime
 
 interface IActionPlex {
@@ -70,11 +64,11 @@ fun ActionPlex.getActionTimer(uuid : UUID) : Timer = if (this[uuid] != null) thi
 @ExperimentalUnsignedTypes
 fun ActionPlex.cycleState(uuid : UUID) {
     when (this.getActionState(uuid) ) {
-        ActionQueue -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionPrepare)
+        ActionQueue -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionPrepare, updTimer = Timer())
         ActionPrepare -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionExecute, updTimer = Timer())
         ActionExecute -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionRecover, updTimer = Timer())
         ActionRecover -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionQueue, updTimer = Timer())
-        else -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionQueue, updTimer = Timer())
+        else -> this[uuid] = StateAction(copyStateAction = this[uuid]!!, updActionState = ActionQueue)
     }
 }
 
@@ -158,7 +152,8 @@ suspend fun ActionPlex.executeAction(uuid : UUID, conditionParamMap: ConditionPa
             Action.Immediate.execute(this[uuid]!!.action, conditionParamMap, this[uuid]!!.actionParamList)
 
             //extend execution time by idle moments param
-            if ( this[uuid]!!.action == Idle) this[uuid] = StateAction(copyStateAction = this[uuid]!!, updAction = Action(Idle, updMomentsToExecute = this[uuid]!!.actionParamList!!.idleParamMoments()))
+            if ( this[uuid]!!.action == Idle) this[uuid] = StateAction(copyStateAction = this[uuid]!!, updAction = Action(
+                Idle, updMomentsToExecute = Idle.IdleParamList(this[uuid]!!.actionParamList!!).moments!!))
 
         }
         else -> this.cycleState(uuid)
@@ -257,6 +252,13 @@ fun ActionPlex.preempt(uuid: UUID, maxPlexSize: Int) : Boolean {
     }
 
     return false
+}
+
+@ExperimentalUnsignedTypes
+fun ActionPlex.getImMap() : ImActionPlex {
+
+    return this.toList().sortedWith(compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.actionState }
+            .thenByDescending { it.second.timer.getMillisecondsElapsed() }).toMap()
 }
 
 @ExperimentalUnsignedTypes

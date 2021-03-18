@@ -1,8 +1,8 @@
-package conditions
+package condition
 
-import actions.param
+import action.param
 
-interface ISimpleConditionable : IConditionable {
+interface ISimpleCondition : ICondition {
 
     override val conditions : ConditionList
         get() = super.conditions.plus(

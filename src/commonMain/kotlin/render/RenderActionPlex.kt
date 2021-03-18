@@ -1,30 +1,27 @@
 package render
 
-import actions.ActionPlex
-import actions.ActionPriority.Companion.BaseAction
-import actions.ImActionPlex
-import actions.actionables.IIdlor.Companion.Idle
-import actions.actionables.IInstantiator.Companion.Destantiate
-import actions.actionables.IInstantiator.Companion.Instantiate
-import actions.actionables.IObservor.Companion.Look
-import actions.actionables.IObservor.Companion.Reflect
-import actions.actionables.IObservor.Companion.Watch
+import action.ActionPriority.Companion.BaseAction
+import action.ImActionPlex
 import com.soywiz.klock.DateTime
+import com.soywiz.korge.internal.KorgeInternal
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
 import com.soywiz.korim.font.BitmapFont
 import com.soywiz.korim.font.DefaultTtfFont
 import com.soywiz.korim.paint.LinearGradientPaint
 import com.soywiz.korim.text.TextAlignment
+import com.soywiz.korio.async.runBlockingNoJs
 import com.soywiz.korio.util.UUID
 import com.soywiz.korma.geom.Point
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import state.ActionState
-import state.StateAction
+import state.ActionState.Companion.ActionExecute
+import state.ActionState.Companion.ActionPrepare
+import state.ActionState.Companion.ActionRecover
+import action.StateAction
+import action.actions.*
 import templates.IInstance
-import time.GlobalTimer
-import time.GlobalTimer.mSecRenderStatusDelay
+import templates.Moment
 import time.Timer
 import kotlin.time.ExperimentalTime
 
@@ -32,6 +29,8 @@ object RenderActionPlex {
 
     @ExperimentalUnsignedTypes
     val instances: RenderInstancePositionMap = mutableMapOf()
+    @ExperimentalUnsignedTypes
+    val currentInstanceViews: RenderInstanceViewMap = mutableMapOf()
 
     lateinit var container: Container //set this with Korge.rootContainer before running anything
 
@@ -46,10 +45,10 @@ object RenderActionPlex {
 //        )
     )
 
-    fun Container.clear(xPos: Double, yPos: Double) {
+    fun Container.clear(xPos: Double, yPos: Double) : View {
         val checkTimer = Timer()
 
-        this.solidRect(width = 150, height = 250, color = Colors["#2b2b2b"]).position(xPos, yPos)
+        return this.solidRect(width = 150, height = 300, color = Colors["#2b2b2b"]).position(xPos, yPos)
 
 //        println("RenderActionPlex(clear) @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()} $momentCounter")
 
@@ -70,16 +69,21 @@ object RenderActionPlex {
         return instances.size
     }
 
+    @KorgeInternal
     @ExperimentalUnsignedTypes
     fun removeInstance(kInstance: IInstance) {
 
         val startingPosition = Point(50, 50)
 
+
+        currentInstanceViews.filterValues { it == kInstance.getInstanceId()}.keys.forEach { if (container.children.contains(it)) container.removeChild(it) }
+        currentInstanceViews.filterValues { it == kInstance.getInstanceId() }.keys.forEach { currentInstanceViews.remove(it) }
+
         instances.toMap().forEach { pos ->
             val xPos = startingPosition.x + (pos.key % 6) * 150
-            val yPos = startingPosition.y + (pos.key / 6) * 250
+            val yPos = startingPosition.y + (pos.key / 6) * 300
 
-            if (pos.value == kInstance) container.clear(xPos - 25, yPos - 25)
+//            if (pos.value == kInstance) container.clear(xPos - 25, yPos - 25)
         }
 
         instances.remove(instances.filterValues { it == kInstance }.keys.toList()[0])
@@ -91,20 +95,20 @@ object RenderActionPlex {
     @ExperimentalCoroutinesApi
     @ExperimentalUnsignedTypes
     @ExperimentalTime
-    suspend fun renderInstance(instanceName : String, instanceLocation : Int, imActionPlex: ImActionPlex, startingPosition: Point) = coroutineScope {
+    fun renderInstance(instanceId : UUID, instanceName : String, instanceLocation : Int, instanceMoment: Moment, imActionPlex: ImActionPlex, startingPosition: Point) = runBlockingNoJs {
 
         val checkTimer = Timer()
 
-        val renderPosition = Point(x = startingPosition.x + (instanceLocation % 6) * 150, y = startingPosition.y + (instanceLocation / 6) * 250)
+        val renderPosition = Point(x = startingPosition.x + (instanceLocation % 6) * 150, y = startingPosition.y + (instanceLocation / 6) * 300)
 
-        container.clear(renderPosition.x - 25, renderPosition.y - 25)
+        currentInstanceViews.put(container.clear(renderPosition.x - 25, renderPosition.y - 25), instanceId)
 
-        container.text(
+        currentInstanceViews.put(container.text(
             instanceName,
             font = font,
             textSize = 24.0,
             alignment = TextAlignment.BASELINE_LEFT
-        ).position(renderPosition.x, renderPosition.y)
+        ).position(renderPosition.x, renderPosition.y), instanceId)
 
         var slotIdx = 0
 
@@ -113,9 +117,11 @@ object RenderActionPlex {
         //instancePlex.collect
         imActionPlex.forEach { slot ->
 
-            renderSlot(slotIdx, slot.value, renderPosition)
+            (1..slot.value.plexSlotsFilled).toList().forEach {
+                renderSlot(instanceId, slotIdx, slot.value, instanceMoment, renderPosition)
+                slotIdx++
+            }
 
-            slotIdx++
         }
 //        println("RenderActionPlex(renderInstance) @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()} $momentCounter")
 
@@ -124,13 +130,30 @@ object RenderActionPlex {
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
     @ExperimentalTime
-    fun renderSlot(slotIdx: Int, stateAction: StateAction, renderPos: Point) {
+    fun renderSlot(instanceId: UUID, slotIdx: Int, stateAction: StateAction, instanceMoment : Moment, renderPos: Point) {
 
 //        val checkTimer = Timer()
+
+        val momentsElapsed = (stateAction.timer.getMillisecondsElapsed() / instanceMoment.milliseconds).toDouble()
+
+        val percentFilled = when (stateAction.actionState) {
+            ActionPrepare -> (momentsElapsed + 1) / stateAction.action.momentsToPrepare.toDouble()
+            ActionExecute -> (momentsElapsed + 1) / stateAction.action.momentsToExecute.toDouble()
+            ActionRecover -> (momentsElapsed + 1) / stateAction.action.momentsToRecover.toDouble()
+            else -> momentsElapsed / (momentsElapsed + 1) //Zeno's queue
+        }
+
+        if (percentFilled > 1) println("percentFilled overflow : $percentFilled for moment ${instanceMoment.milliseconds} $stateAction")
+
+        val renderPercentFilled = if (percentFilled > 1) 1.0 else percentFilled
+
+        //println ("momentsElapsed: $momentsElapsed -> percentFilled: $percentFilled")
 
         val xSlotPos = renderPos.x
         val ySlotPos = renderPos.y + 25 + slotIdx * 25
         val fillText = stateAction.action.action
+
+
         val fillTextColor = when (stateAction.action) {
             Instantiate -> Colors["#37f585"]
             Destantiate -> Colors["#f58858"]
@@ -155,72 +178,66 @@ object RenderActionPlex {
             }
         }
 
-        container.roundRect(80, 20, 1, 1, fillColor).position(xSlotPos, ySlotPos)
-        container.text(fillText, textSize = 14.0, color = fillTextColor).position(xSlotPos, ySlotPos)
+        currentInstanceViews.put(container.roundRect(80, 20, 1, 1, fillColor.withA(80)).position(xSlotPos, ySlotPos), instanceId)
+        currentInstanceViews.put(container.roundRect((80 * renderPercentFilled).toInt(), 20, 1, 1, fillColor).position(xSlotPos, ySlotPos), instanceId)
+        currentInstanceViews.put(container.text(fillText, textSize = 14.0, color = fillTextColor).position(xSlotPos, ySlotPos), instanceId)
 
   //      println("RenderActionPlex(renderSlot) @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()} $momentCounter")
 
     }
 
-    @ExperimentalUnsignedTypes
-    val renderChannel = Channel<RenderData>()
-/*
-    @ExperimentalCoroutinesApi
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
-    suspend fun perform(timer: Timer): Timer = coroutineScope {
-
-        val startingPosition = Point(50, 50)
-
-//        val checkTimer = Timer()
-
-        coroutineScope {
-        while (!renderChannel.isEmpty) {
-            val renderData : RenderData = renderChannel.receive()
-
-            val renderInstanceEntry : Map.Entry<Int, IInstance>? = instances.filterValues { it.getInstanceId() == renderData.first }.entries.firstOrNull()
-
-            if (renderInstanceEntry == null) {
-                println("RenderActionPlex.perform() instance not found for uuid ${renderData.first}")
-                return@coroutineScope Timer()
-            }
-
-//            println("render @ ${ DateTime.now() } ${renderInstanceEntry.value.getInstanceName()}")
-
-            renderInstance(instanceName = renderInstanceEntry.value.getInstanceName(), instanceLocation = renderInstanceEntry.key, imActionPlex = renderData.second, startingPosition = startingPosition)
-        }
-}
-//        println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}, RT:${timer.getMillisecondsElapsed()}, $momentCounter")
-
-        return@coroutineScope Timer()
-    }
-}
-*/
+@KorgeInternal
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 @ExperimentalUnsignedTypes
-suspend fun render(instanceId : UUID, imActionPlex: ImActionPlex) = coroutineScope {
+suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImActionPlex) = coroutineScope {
+
+//        println("container:$container, numChildren:${container.numChildren}, currentInstanceViews: ${currentInstanceViews.size}, children: ${container.children}")
 
         val checkTimer = Timer()
-            val startingPosition = Point(50, 50)
 
-            val renderInstanceEntry : Map.Entry<Int, IInstance>? = instances.filterValues { it.getInstanceId() == instanceId }.entries.firstOrNull()
+        val pastInstanceViews: RenderInstanceViewMap = mutableMapOf()
 
-            if (renderInstanceEntry == null) {
-                println("RenderActionPlex.perform() instance not found for uuid $instanceId")
-                return@coroutineScope Timer()
+        val copyCurViewsIter = currentInstanceViews.iterator()
+        while (copyCurViewsIter.hasNext()) {
+            val entry = copyCurViewsIter.next()
+            if (entry.value == instanceId) pastInstanceViews.put(entry.key, entry.value)
+        }
+
+        val removeCurViewsIter = currentInstanceViews.iterator()
+        while (removeCurViewsIter.hasNext()) if (removeCurViewsIter.next().value == instanceId) removeCurViewsIter.remove()
+
+        val startingPosition = Point(50, 50)
+
+        val renderInstanceEntry : Map.Entry<Int, IInstance>? = instances.filterValues { it.getInstanceId() == instanceId }.entries.firstOrNull()
+
+        if (renderInstanceEntry == null) {
+            println("RenderActionPlex.perform() instance not found for uuid $instanceId")
+            return@coroutineScope Timer()
+        }
+
+        println("render @ ${ DateTime.now() } ${renderInstanceEntry.value.getInstanceName()} on $container")
+
+
+        renderInstance(
+            instanceId = instanceId,
+            instanceName = renderInstanceEntry.value.getInstanceName(),
+            instanceLocation = renderInstanceEntry.key,
+            instanceMoment = instanceMoment,
+            imActionPlex = imActionPlex,
+            startingPosition = startingPosition
+        )
+
+            val removePastViewsIter = pastInstanceViews.iterator()
+            while (removePastViewsIter.hasNext()) {
+                val entry = removePastViewsIter.next()
+//                if (container.children.toList().contains(entry.key)) container.removeChild(entry.key)
+                if (container.children.toList().contains(entry.key)) entry.key.removeFromParent() //recommendation from soywiz
             }
 
-            println("render @ ${ DateTime.now() } ${renderInstanceEntry.value.getInstanceName()} on $container")
+//            pastInstanceViews.keys.forEach { if (container.children.contains(it)) container.removeChild(it) }
 
-            renderInstance(
-                instanceName = renderInstanceEntry.value.getInstanceName(),
-                instanceLocation = renderInstanceEntry.key,
-                imActionPlex = imActionPlex,
-                startingPosition = startingPosition
-            )
-
-        println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}")
+            println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}")
         }
 
 }
@@ -229,4 +246,5 @@ suspend fun render(instanceId : UUID, imActionPlex: ImActionPlex) = coroutineSco
 @ExperimentalUnsignedTypes
 typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 
-typealias RenderData = Pair<UUID, ImActionPlex>
+@ExperimentalUnsignedTypes
+typealias RenderInstanceViewMap = MutableMap<View, UUID>

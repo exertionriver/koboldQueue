@@ -1,29 +1,21 @@
 package templates
 
-import actions.*
-import actions.actionables.ActionConditionsMap
-import actions.actionables.IActionable
+import action.*
 import templates.*
-import actions.actionables.IObservor.Companion.Look
-import actions.actionables.IObservor.Companion.Watch
-import actions.actionables.IIdlor.Companion.Idle
 import com.soywiz.korio.util.UUID
 import kotlinx.coroutines.*
 import time.Timer
-import actions.actionables.IObservor.Companion.Reflect
-import actions.actionables.IObservor.Companion.lookParamList
-import actions.actionables.IObservor.Companion.reflectParamList
-import actions.actionables.IObservor.Companion.watchParamList
-import conditions.ISimpleConditionable.Companion.Always
-import conditions.Probability
-import conditions.ProbabilitySelect
-import actions.actionables.IIdlor.Companion.idleParamList
-import actions.actionables.IInstantiable
-import actions.actionables.IObservable
-import com.soywiz.klock.DateTime
+import action.actions.Idle
+import action.actions.Look
+import action.actions.Reflect
+import action.actions.Watch
+import action.roles.IInstantiable
+import action.roles.IObservable
+import com.soywiz.korge.internal.KorgeInternal
+import condition.ISimpleCondition.Companion.Always
+import condition.Probability
+import condition.ProbabilitySelect
 import render.RenderActionPlex
-import time.GlobalTimer
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -39,6 +31,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
     var momentCounter = 0
 
+    @KorgeInternal
     @ExperimentalCoroutinesApi
     override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
@@ -53,8 +46,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
                     when (it.key) {
-                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.lookParamList(kInstanceName, instanceRegister) )
-                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.reflectParamList(kInstanceName) )
+                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.LookParamList(kInstanceName, instanceRegister).actionParamList() )
+                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.ReflectParamList(kInstanceName).actionParamList() )
                         else -> actionPlex.startAction(it.key, ActionPriority.BaseAction)
                     }
 //                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
@@ -71,9 +64,9 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
                 )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Look -> Look.lookParamList(kInstanceName, instanceRegister)
-                    Watch -> Watch.watchParamList(kInstanceName, instanceRegister)
-                    else -> Idle.idleParamList(kInstanceName, Probability(3,2).getValue().toInt())
+                    Look -> Look.LookParamList(kInstanceName, instanceRegister).actionParamList()
+                    Watch -> Watch.WatchParamList(kInstanceName, instanceRegister).actionParamList()
+                    else -> Idle.IdleParamList(kInstanceName, Probability(3,2).getValue().toInt()).actionParamList()
                 }
 
                 actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)
@@ -82,7 +75,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
             }
 
         actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
-        RenderActionPlex.render(id, actionPlex.toMap())
+        RenderActionPlex.render(id, moment, actionPlex.getImMap())
 //        println("Kobold $kInstanceName checktimer before: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
         delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
 
@@ -108,7 +101,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
     override fun getInstanceName() = kInstanceName
 
-    companion object : IInstantiable, IActionable {
+    companion object : IInstantiable, IAction {
 
         override val templateName : String = Kobold::class.simpleName!!
 

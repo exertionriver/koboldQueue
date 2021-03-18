@@ -1,8 +1,8 @@
 package state
 
-class RegisterState(override val state: String) : State(state) {
+class RegisterState(override val state: String, override val ordering: Int) : State(state, ordering) {
 
     companion object {
-        val WatchState = RegisterState("watch")
+        val WatchState = RegisterState("watch", 0)
     }
 }

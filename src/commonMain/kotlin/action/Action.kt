@@ -1,19 +1,16 @@
-package actions
+package action
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
-import actions.ActionPriority.Companion.MediumSecond
-import actions.ActionType.Companion.OneTimeExec
-import actions.actionables.IActionable
+import action.ActionPriority.Companion.MediumSecond
+import action.ActionType.Companion.OneTimeExec
 import com.soywiz.korio.util.UUID
-import conditions.ConditionParamMap
-import state.StateAction
+import condition.ConditionParamMap
 import templates.Moment
-import time.Timer
 import kotlin.time.ExperimentalTime
 
-class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToExecute : Int = 1, val momentsToRecover : Int = 1, val plexSlotsRequired : Int = 1,
-             val actionType : ActionType = OneTimeExec, val actionPriority : ActionPriority = MediumSecond, val description : String? = null, val executor : ActionExecutor
+open class Action(val action : String, val momentsToPrepare : Int = 2, val momentsToExecute : Int = 3, val momentsToRecover : Int = 2, val plexSlotsRequired : Int = 1,
+                  val actionType : ActionType = OneTimeExec, val actionPriority : ActionPriority = MediumSecond, val description : ActionDescription, val executor : ActionExecutor
 ) {
 
     //update constructor
@@ -25,7 +22,7 @@ class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToE
                 , updPlexSlotsRequired: Int = copyAction.plexSlotsRequired
                 , updActionType: ActionType = copyAction.actionType
                 , updActionPriority: ActionPriority = copyAction.actionPriority
-                , updDescription : String? = copyAction.description
+                , updDescription : ActionDescription = copyAction.description
                 , updExecutor : ActionExecutor = copyAction.executor
     ) : this (
         action = updAction
@@ -41,7 +38,7 @@ class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToE
 
     @ExperimentalUnsignedTypes
     @ExperimentalTime
-    object Immediate : IActionable {
+    object Immediate : IAction {
 
         @ExperimentalCoroutinesApi
         override suspend fun execute(action: Action, conditionParamMap: ConditionParamMap, actionParamList: ActionParamList?) = coroutineScope {
@@ -80,7 +77,12 @@ class Action(val action : String, val momentsToPrepare : Int = 1, val momentsToE
     }
 }
 
+
+
 typealias ActionParamList = List<Any>
 inline fun <reified T> ActionParamList.param(index : Int) : T = if (this[index] is T) this[index] as T else throw IllegalArgumentException(this.toString())
 
+typealias ActionDescription = () -> String
 typealias ActionExecutor = (actionParams : ActionParamList?) -> String?
+
+//typealias ActionExecutor = (actionParams : Any?) -> String?

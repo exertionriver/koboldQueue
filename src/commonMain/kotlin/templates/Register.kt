@@ -1,32 +1,23 @@
 package templates
 
-import time.GlobalTimer
 import time.Timer
-import actions.actionables.ActionConditionsMap
-import actions.ActionPlex
-import actions.actionables.IInstantiable
-import actions.actionables.IInstantiator
+import action.ActionConditionsMap
+import action.ActionPlex
+import action.actions.Instantiate
+import action.roles.IInstantiable
+import action.roles.IInstantiator
 import com.soywiz.korio.util.UUID
-import actions.actionables.IInstantiator.Companion.Instantiate
-import actions.cancelAction
-import actions.cancelAll
-import actions.stateString
-import com.soywiz.klock.DateTime
+import action.cancelAll
 import com.soywiz.korio.async.launch
-import conditions.ISimpleConditionable.Companion.Always
+import condition.ISimpleCondition.Companion.Always
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import render.RenderActionPlex
-import state.StateAction
-import time.GlobalTimer.mSecPerceptionDelay
-import time.GlobalTimer.mSecRenderDelay
 import kotlin.time.ExperimentalTime
 
 open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
 
     val entries : RegisterEntries = mutableMapOf()
-
 
  //   fun getEntries() = entries.toMap()
 

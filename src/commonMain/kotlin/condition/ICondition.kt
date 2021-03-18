@@ -1,9 +1,9 @@
-package conditions
+package condition
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
-interface IConditionable {
+interface ICondition {
 
     val conditions: ConditionList
         get() = listOf()
@@ -16,7 +16,7 @@ interface IConditionable {
 
         val evalReturn = condition.evaluator(conditionParamList)
 
-//        AsyncTimer.perceptionChannel.send("eval return @ ${ Clock.System.now().toLocalDateTime(TimeZone.UTC) } ${condition.description}: $evalReturn")
+   //     GlobalChannel.logInfoChannel.send("eval return @ ${ DateTime.now() } ${condition.description}: $evalReturn")
 
         return evalReturn
     }

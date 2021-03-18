@@ -1,13 +1,13 @@
 package state
 
-class ActionState(override val state: String) : State(state) {
+class ActionState(override val state: String, override val ordering: Int) : Comparable<ActionState>, State(state, ordering) {
 
     companion object {
-        val ActionQueue = ActionState("actionQueue")
-        val ActionPrepare = ActionState("actionPrepare")
-        val ActionExecute = ActionState("actionExecute")
-        val ActionRecover = ActionState("actionRecover")
-        val ActionNotFound = ActionState("actionNotFound")
+        val ActionQueue = ActionState("actionQueue", 1)
+        val ActionPrepare = ActionState("actionPrepare", 2)
+        val ActionExecute = ActionState("actionExecute", 3)
+        val ActionRecover = ActionState("actionRecover", 4)
+        val ActionNotFound = ActionState("actionNotFound", 0)
 
         val InProcess = listOf(ActionPrepare, ActionExecute, ActionRecover)
         val Interruptable = listOf(ActionPrepare, ActionExecute, ActionRecover)
@@ -15,4 +15,7 @@ class ActionState(override val state: String) : State(state) {
     }
 
     override fun toString() = "${ActionState::class.simpleName}($state)"
+
+    override fun compareTo(other: ActionState): Int = this.ordering.compareTo(other.ordering)
+
 }

@@ -1,8 +1,6 @@
-package state
+package action
 
-import actions.Action
-import actions.ActionParamList
-import actions.ActionPriority
+import state.ActionState
 import time.Timer
 
 class StateAction(val action : Action, val plexSlotsFilled : Int, val actionState: ActionState, val actionPriority: ActionPriority, val actionParamList: ActionParamList? = null, val timer: Timer = Timer()) {
@@ -24,5 +22,5 @@ class StateAction(val action : Action, val plexSlotsFilled : Int, val actionStat
         , timer = updTimer
     )
 
-    override fun toString() = "${StateAction::class.simpleName}($action, $actionState, $actionPriority, $actionParamList, $timer)"
+    override fun toString() = "${StateAction::class.simpleName}($action, $plexSlotsFilled, $actionState, $actionPriority, $actionParamList, $timer)"
 }

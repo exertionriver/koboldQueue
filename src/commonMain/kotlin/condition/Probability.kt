@@ -1,4 +1,4 @@
-package conditions
+package condition
 
 import kotlin.random.Random
 
