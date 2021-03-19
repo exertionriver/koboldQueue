@@ -1,6 +1,8 @@
 package action.actions
 
+import ActionParamList
 import action.*
+import param
 import templates.IInstance
 import templates.Register
 
@@ -15,7 +17,7 @@ object Watch : Action(action = "watch"
         else WatchParamList(watchParams).watchDescription()
     }
 ) {
-    class WatchParamList(val kInstance: IInstance?, val register: Register?) {
+    class WatchParamList(var kInstance: IInstance?, var register: Register?) {
 
         constructor(actionParamList: ActionParamList) : this(
             kInstance = actionParamList.param<IInstance>(0)
@@ -28,10 +30,13 @@ object Watch : Action(action = "watch"
             "IInstance named ${kInstanceNameOrT()} watches IDescribable objects " +
             "in Register ${registerNameOrT()}"
 
-        fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+        private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
-        fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
+        private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
         fun actionParamList() = listOf(kInstance, register) as ActionParamList
     }
+
+    @ExperimentalUnsignedTypes
+    fun params(lambda: WatchParamList.() -> Unit) = WatchParamList().apply(lambda).actionParamList()
 }

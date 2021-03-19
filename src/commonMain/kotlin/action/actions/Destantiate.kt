@@ -1,8 +1,8 @@
 package action.actions
 
+import ActionParamList
 import action.Action
-import action.ActionParamList
-import action.param
+import param
 import templates.IInstance
 import templates.Register
 
@@ -32,13 +32,13 @@ object Destantiate : Action(action = "destantiate"
                 "Destantiating ${kInstanceNameOrT()} " +
                 "from Register ${registerNameOrT()}"
 
-        fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+        private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
-        fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
+        private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
         fun actionParamList() = listOf(kInstance, register) as ActionParamList
     }
 
     @ExperimentalUnsignedTypes
-    fun Params(lambda: Destantiate.DestantiateParamList.() -> Unit) = Destantiate.DestantiateParamList().apply(lambda).actionParamList()
+    fun params(lambda: DestantiateParamList.() -> Unit) = DestantiateParamList().apply(lambda).actionParamList()
 }

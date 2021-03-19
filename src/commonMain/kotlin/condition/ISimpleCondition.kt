@@ -1,6 +1,8 @@
 package condition
 
-import action.param
+import ConditionList
+import ConditionParamList
+import param
 
 interface ISimpleCondition : ICondition {
 

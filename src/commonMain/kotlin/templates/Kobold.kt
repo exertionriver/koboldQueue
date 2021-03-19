@@ -1,5 +1,7 @@
 package templates
 
+import ActionConditionsMap
+import ActionPlex
 import action.*
 import templates.*
 import com.soywiz.korio.util.UUID
@@ -12,6 +14,7 @@ import action.actions.Watch
 import action.roles.IInstantiable
 import action.roles.IObservable
 import com.soywiz.korge.internal.KorgeInternal
+import com.soywiz.korge.view.views
 import condition.ISimpleCondition.Companion.Always
 import condition.Probability
 import condition.ProbabilitySelect
@@ -46,8 +49,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
                     when (it.key) {
-                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.LookParamList(this@Kobold, instanceRegister).actionParamList() )
-                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.ReflectParamList(this@Kobold).actionParamList() )
+                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.params { kInstance = this@Kobold; register = instanceRegister } )
+                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.params { kInstance = this@Kobold } )
                         else -> actionPlex.startAction(it.key, ActionPriority.BaseAction)
                     }
 //                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
@@ -64,9 +67,9 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
                 )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Look -> Look.LookParamList(this@Kobold, instanceRegister).actionParamList()
-                    Watch -> Watch.WatchParamList(this@Kobold, instanceRegister).actionParamList()
-                    else -> Idle.IdleParamList(kInstanceName, Probability(3,2).getValue().toInt()).actionParamList()
+                    Look -> Look.params { kInstance = this@Kobold; register = instanceRegister }
+                    Watch -> Watch.params { kInstance = this@Kobold; register = instanceRegister }
+                    else -> Idle.params { kInstance = this@Kobold; moments = Probability(3,2).getValue().toInt() }
                 }
 
                 actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)

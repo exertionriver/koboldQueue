@@ -13,6 +13,8 @@ class ActionPriority(val priority: String, val valueClass : Int, val valueInClas
         val LowFirst = ActionPriority("lowFirst", 3, 1)
         val LowSecond = ActionPriority("lowSecond", 3, 2)
         val LowThird = ActionPriority("lowThird", 3, 3)
+
+        val ActionPriorityNone = ActionPriority("actionPriorityNone", 10, 10)
     }
 
     fun getPriority() = this.valueClass * 10 + this.valueInClass

@@ -3,7 +3,6 @@ package action
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import action.ActionPriority.Companion.BaseAction
 import state.ActionState.Companion.ActionExecute
-import state.ActionState.Companion.ActionNotFound
 import state.ActionState.Companion.ActionPrepare
 import state.ActionState.Companion.ActionQueue
 import state.ActionState.Companion.ActionRecover
@@ -11,13 +10,20 @@ import state.ActionState.Companion.InProcess
 import state.ActionState.Companion.Interruptable
 import state.ActionState.Companion.Preemptable
 import action.ActionType.Companion.Continual
+import ActionParamList
+import ActionPlex
+import ConditionParamMap
 import action.actions.Idle
+import ImActionPlex
+import action.Action.Companion.ActionNone
+import action.StateAction.Companion.StateActionNone
+import com.soywiz.korio.async.runBlockingNoSuspensions
 import com.soywiz.korio.util.UUID
 import templates.Moment
 import time.Timer
-import condition.ConditionParamMap
 import condition.ISimpleCondition.Companion.Always
 import state.ActionState
+import state.ActionState.Companion.ActionStateNone
 
 import kotlin.time.ExperimentalTime
 
@@ -30,12 +36,6 @@ interface IActionPlex {
 
     val maxPlexSize : Int
 }
-
-@ExperimentalUnsignedTypes
-typealias ActionPlex = MutableMap<UUID, StateAction> //slots to StateActions, max of maxPlexSize
-
-typealias ImActionPlex = Map<UUID, StateAction> //slots to StateActions, max of maxPlexSize
-
 
 @ExperimentalUnsignedTypes
 fun ActionPlex.slotsInUse() : Int {
@@ -54,7 +54,16 @@ fun ActionPlex.slotsAvailable(maxPlexSize : Int) : Int {
 }
 
 @ExperimentalUnsignedTypes
-fun ActionPlex.getActionState(uuid: UUID) : ActionState = if (this[uuid] != null) this[uuid]!!.actionState else ActionNotFound
+fun ActionPlex.getStateAction(uuid: UUID) : StateAction = if (this[uuid] != null) this[uuid]!! else StateActionNone
+
+@ExperimentalUnsignedTypes
+fun ActionPlex.getAction(uuid: UUID) : Action = if (this[uuid] != null) this[uuid]!!.action else ActionNone
+
+@ExperimentalUnsignedTypes
+fun ActionPlex.getActionState(uuid: UUID) : ActionState = if (this[uuid] != null) this[uuid]!!.actionState else ActionStateNone
+
+@ExperimentalUnsignedTypes
+fun ActionPlex.getActionParamList(uuid: UUID) : ActionParamList? = if (this[uuid] != null) this[uuid]!!.actionParamList else null
 
 @ExperimentalUnsignedTypes
 fun ActionPlex.getActionTimer(uuid : UUID) : Timer = if (this[uuid] != null) this[uuid]!!.timer else Timer()
@@ -149,11 +158,13 @@ suspend fun ActionPlex.executeAction(uuid : UUID, conditionParamMap: ConditionPa
         ActionPrepare -> {
             this.cycleState(uuid)
 
-            Action.Immediate.execute(this[uuid]!!.action, conditionParamMap, this[uuid]!!.actionParamList)
+            Action.Immediate.execute(getAction(uuid), conditionParamMap, getActionParamList(uuid))
 
             //extend execution time by idle moments param
-            if ( this[uuid]!!.action == Idle) this[uuid] = StateAction(copyStateAction = this[uuid]!!, updAction = Action(
-                Idle, updMomentsToExecute = Idle.IdleParamList(this[uuid]!!.actionParamList!!).moments!!))
+            if ( getAction(uuid) == Idle) {
+                this[uuid] = StateAction(copyStateAction = getStateAction(uuid)
+                    , updAction = Action(getAction(uuid), updMomentsToExecute = Idle.IdleParamList(getActionParamList(uuid)!!).moments!! ) )
+            }
 
         }
         else -> this.cycleState(uuid)

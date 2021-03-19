@@ -1,11 +1,10 @@
 package action.actions
 
+import ActionParamList
 import action.Action
-import action.ActionParamList
 import action.ActionPriority
-import action.param
+import param
 import templates.IInstance
-import templates.Register
 
 object Reflect : Action(action = "reflect"
     , actionPriority = ActionPriority.LowSecond
@@ -15,7 +14,7 @@ object Reflect : Action(action = "reflect"
         else ReflectParamList(reflectParams).reflectDescription()
     }
 ) {
-    class ReflectParamList(val kInstance: IInstance?) {
+    class ReflectParamList(var kInstance: IInstance?) {
 
         constructor(actionParamList: ActionParamList) : this(
             kInstance = actionParamList.param<IInstance>(0)
@@ -26,8 +25,11 @@ object Reflect : Action(action = "reflect"
         fun reflectDescription() : String = "${Reflect::class.simpleName} -> " +
             "IInstance named ${kInstanceNameOrT()} reflects upon the situation"
 
-        fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+        private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
         fun actionParamList() = listOf(kInstance) as ActionParamList
     }
+
+    @ExperimentalUnsignedTypes
+    fun params(lambda: ReflectParamList.() -> Unit) = ReflectParamList().apply(lambda).actionParamList()
 }

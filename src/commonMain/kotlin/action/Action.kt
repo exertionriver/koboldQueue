@@ -4,8 +4,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import action.ActionPriority.Companion.MediumSecond
 import action.ActionType.Companion.OneTimeExec
+import ActionDescription
+import ActionExecutor
+import ActionParamList
+import ActionPlex
+import ConditionParamMap
+import action.actions.Destantiate
 import com.soywiz.korio.util.UUID
-import condition.ConditionParamMap
 import templates.Moment
 import kotlin.time.ExperimentalTime
 
@@ -51,6 +56,10 @@ open class Action(val action : String, val momentsToPrepare : Int = 2, val momen
 
     override fun toString() = "${Action::class.simpleName}($action, $momentsToPrepare, $momentsToExecute, $momentsToRecover, $plexSlotsRequired, $actionType, $actionPriority, $description, executor())"
 
+    override fun equals(other: Any?): Boolean {
+        return this.action == (other as Action).action
+    }
+
     companion object {
 
         @ExperimentalCoroutinesApi
@@ -74,15 +83,9 @@ open class Action(val action : String, val momentsToPrepare : Int = 2, val momen
 
             return@coroutineScope actionPlex
         }
+
+        val ActionNone = Action(action = "none", description = fun() : String = "none", executor = fun(_: ActionParamList?) : String = "none")
     }
 }
-
-
-
-typealias ActionParamList = List<Any>
-inline fun <reified T> ActionParamList.param(index : Int) : T = if (this[index] is T) this[index] as T else throw IllegalArgumentException(this.toString())
-
-typealias ActionDescription = () -> String
-typealias ActionExecutor = (actionParams : ActionParamList?) -> String?
 
 //typealias ActionExecutor = (actionParams : Any?) -> String?

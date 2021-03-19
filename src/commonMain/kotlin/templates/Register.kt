@@ -1,17 +1,19 @@
 package templates
 
+import ActionConditionsMap
 import time.Timer
-import action.ActionConditionsMap
-import action.ActionPlex
+import ActionPlex
+import RegisterEntries
 import action.actions.Instantiate
+import action.cancelAll
 import action.roles.IInstantiable
 import action.roles.IInstantiator
 import com.soywiz.korio.util.UUID
-import action.cancelAll
 import com.soywiz.korio.async.launch
+import com.soywiz.korio.async.runBlockingNoSuspensions
 import condition.ISimpleCondition.Companion.Always
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import registerChannel
 import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
 
@@ -48,7 +50,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
 
 
     @ExperimentalUnsignedTypes
-    fun removeInstance(kInstance : IInstance, register : Register) {
+    fun removeInstance(kInstance : IInstance, register : Register) = runBlockingNoSuspensions {
 //        GlobalTimer.globalChannel.send("destantiated ${kInstance.getInstanceName()} in ${register.kInstanceName} ")
 //        println("entries before destantiation: $entries")
 //        println("actionPlex before destantiation: ${entries[kInstance.getInstanceName()]!!.actionPlex.stateString()}")
@@ -128,12 +130,3 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
             )
     }
 }
-
-typealias RegisterEntries = MutableMap<IInstance, Job>
-
-typealias ImRegisterEntries = Map<IInstance, Job>
-
-typealias RegisterData = Pair<UUID, ImRegisterEntries>
-
-@ExperimentalCoroutinesApi
-val registerChannel = Channel<RegisterData>(32)

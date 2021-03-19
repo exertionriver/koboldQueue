@@ -1,7 +1,7 @@
 package action.roles
 
+import ActionConditionsMap
 import action.actions.Idle
-import action.ActionConditionsMap
 import action.IAction
 import kotlin.time.ExperimentalTime
 

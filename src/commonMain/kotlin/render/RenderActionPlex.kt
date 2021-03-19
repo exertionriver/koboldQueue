@@ -1,7 +1,9 @@
 package render
 
+import ImActionPlex
+import RenderInstancePositionMap
+import RenderInstanceViewMap
 import action.ActionPriority.Companion.BaseAction
-import action.ImActionPlex
 import com.soywiz.klock.DateTime
 import com.soywiz.korge.internal.KorgeInternal
 import com.soywiz.korge.view.*
@@ -21,7 +23,6 @@ import action.StateAction
 import action.actions.*
 import templates.IInstance
 import templates.Moment
-import time.GlobalChannel
 import time.Timer
 import kotlin.time.ExperimentalTime
 
@@ -207,7 +208,7 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImAc
 
         if (containerCullViewCount > 0) {
             for (idx in 0..containerCullViewCount) {
-                container.firstChild?.removeFromParent()
+                if (container.firstChild != null) container.firstChild!!.removeFromParent()
             }
         }
 
@@ -235,7 +236,7 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImAc
             )
         )
 
-//    launch(CoroutineScope(Dispatchers.Default).coroutineContext) {
+//    launch(views().coroutineContext) {
  //       val removePastViewsIter = instanceViews.iterator()
     //    while (removePastViewsIter.hasNext()) {
       //      GlobalChannel.viewRemoveChannel.send(removePastViewsIter.next().key)
@@ -250,10 +251,3 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImAc
             println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}")
         }
 }
-
-
-@ExperimentalUnsignedTypes
-typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
-
-@ExperimentalUnsignedTypes
-typealias RenderInstanceViewMap = MutableMap<View, UUID>

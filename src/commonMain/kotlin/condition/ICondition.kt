@@ -1,5 +1,7 @@
 package condition
 
+import ConditionList
+import ConditionParamList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
@@ -21,4 +23,3 @@ interface ICondition {
         return evalReturn
     }
 }
-typealias ConditionList = List<Condition>

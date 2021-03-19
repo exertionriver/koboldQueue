@@ -1,9 +1,10 @@
 package action.actions
 
+import ActionParamList
 import action.Action
-import action.ActionParamList
 import action.ActionPriority
-import action.param
+import param
+import templates.IInstance
 
 object Idle : Action(action = "idle"
     , actionPriority = ActionPriority.LowThird
@@ -13,23 +14,26 @@ object Idle : Action(action = "idle"
         else IdleParamList(idleParams).idleDescription()
     }
 ) {
-    class IdleParamList(val kInstanceName : String?, val moments : Int?) {
+    class IdleParamList(var kInstance : IInstance?, var moments : Int?) {
 
-        constructor(actionParamList: ActionParamList) : this(
-            kInstanceName = actionParamList.param<String>(0)
-            , moments = actionParamList.param<Int>(1)
+        constructor(actionParamList: ActionParamList?) : this(
+            kInstance = actionParamList?.param<IInstance>(0)
+            , moments = actionParamList?.param<Int>(1)
         )
 
-        constructor(nullConstructor : Nothing? = null) : this(kInstanceName = null, moments = null)
+        constructor(nullConstructor : Nothing? = null) : this(kInstance = null, moments = null)
 
         fun idleDescription() : String = "${Idle::class.simpleName} -> " +
                 "IInstance named ${kInstanceNameOrT()} " +
                 "putters around for ${momentsOrT()} moments"
 
-        fun kInstanceNameOrT() = kInstanceName ?: String::class.simpleName
+        private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
-        fun momentsOrT() = moments ?: Int::class.simpleName
+        private fun momentsOrT() = moments ?: Int::class.simpleName
 
-        fun actionParamList() : ActionParamList = listOf(kInstanceName, moments) as ActionParamList
+        fun actionParamList() : ActionParamList = listOf(kInstance, moments) as ActionParamList
     }
+
+    @ExperimentalUnsignedTypes
+    fun params(lambda: IdleParamList.() -> Unit) = IdleParamList().apply(lambda).actionParamList()
 }

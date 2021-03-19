@@ -1,11 +1,10 @@
 package action.actions
 
+import ActionParamList
 import action.Action
-import action.ActionParamList
-import action.param
 import action.roles.IInstantiable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import templates.IInstance
+import param
 import templates.Register
 import kotlin.time.ExperimentalTime
 
@@ -23,7 +22,7 @@ object Instantiate : Action(action = "instantiate"
         return InstantiateParamList(instantiateParamList).instantiateDescription()
     }
 ) {
-    class InstantiateParamList(val template : IInstantiable?, val kInstanceName : String?, val register : Register?) {
+    class InstantiateParamList(var template : IInstantiable?, var kInstanceName : String?, var register : Register?) {
 
         constructor(actionParamList: ActionParamList) : this(
             template = actionParamList.param<IInstantiable>(0)
@@ -38,12 +37,16 @@ object Instantiate : Action(action = "instantiate"
                 "as IInstance named ${kInstanceNameOrT()} " +
                 "in Register ${registerNameOrT()}"
 
-        fun templateNameOrT() = template?.getTemplateName() ?: IInstantiable::class.simpleName
+        private fun templateNameOrT() = template?.getTemplateName() ?: IInstantiable::class.simpleName
 
-        fun kInstanceNameOrT() = kInstanceName ?: String::class.simpleName
+        private fun kInstanceNameOrT() = kInstanceName ?: String::class.simpleName
 
-        fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
+        private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
         fun actionParamList() = listOf(template, kInstanceName, register) as ActionParamList
     }
+
+    @ExperimentalUnsignedTypes
+    fun params(lambda: InstantiateParamList.() -> Unit) = InstantiateParamList().apply(lambda).actionParamList()
+
 }

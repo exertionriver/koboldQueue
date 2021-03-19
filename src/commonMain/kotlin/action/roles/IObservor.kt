@@ -1,5 +1,6 @@
 package action.roles
 
+import ActionConditionsMap
 import action.*
 import action.actions.Look
 import action.actions.Reflect

@@ -1,12 +1,14 @@
 package action
 
+import ActionConditionsMap
+import ActionParamList
+import ConditionList
+import ConditionParamMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
-import condition.ConditionList
-import condition.ConditionParamMap
 import condition.ISimpleCondition
 import condition.ISimpleCondition.Companion.Always
-import condition.evaluate
+import evaluate
 import kotlin.time.ExperimentalTime
 
 interface IAction : ISimpleCondition {
@@ -43,6 +45,3 @@ interface IAction : ISimpleCondition {
         return@coroutineScope
     }
 }
-
-typealias ActionConditionsMap = Map<Action, ConditionList?>
-

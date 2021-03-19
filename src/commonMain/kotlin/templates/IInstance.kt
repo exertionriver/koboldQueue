@@ -1,6 +1,6 @@
 package templates
 
-import action.ActionPlex
+import ActionPlex
 import action.IActionPlex
 import com.soywiz.korio.util.UUID
 import time.Timer

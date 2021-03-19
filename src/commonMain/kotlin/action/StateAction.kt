@@ -1,9 +1,13 @@
 package action
 
+import ActionParamList
+import action.Action.Companion.ActionNone
+import action.ActionPriority.Companion.ActionPriorityNone
 import state.ActionState
+import state.ActionState.Companion.ActionStateNone
 import time.Timer
 
-class StateAction(val action : Action, val plexSlotsFilled : Int, val actionState: ActionState, val actionPriority: ActionPriority, val actionParamList: ActionParamList? = null, val timer: Timer = Timer()) {
+class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val actionState: ActionState = ActionStateNone, val actionPriority: ActionPriority = ActionPriorityNone, val actionParamList: ActionParamList? = null, val timer: Timer = Timer()) {
 
     //update constructor
     constructor(copyStateAction : StateAction
@@ -23,4 +27,8 @@ class StateAction(val action : Action, val plexSlotsFilled : Int, val actionStat
     )
 
     override fun toString() = "${StateAction::class.simpleName}($action, $plexSlotsFilled, $actionState, $actionPriority, $actionParamList, $timer)"
+
+    companion object {
+        val StateActionNone = StateAction(ActionNone)
+    }
 }

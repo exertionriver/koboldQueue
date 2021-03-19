@@ -1,7 +1,9 @@
 package templates
 
+import ActionConditionsMap
+import ActionPlex
+import RegisterEntries
 import action.*
-import action.ActionConditionsMap
 import action.actions.Destantiate
 import action.actions.Instantiate
 import action.roles.IInstantiable
@@ -14,6 +16,7 @@ import condition.ProbabilitySelect
 import action.roles.IObservable
 import com.soywiz.korio.util.UUID
 import kotlinx.coroutines.*
+import registerChannel
 import render.RenderActionPlex
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
@@ -68,8 +71,8 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                     )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Instantiate -> Instantiate.InstantiateParamList(Kobold, "krakka${Random.nextInt(256)}", instanceRegister).actionParamList()
-                    Destantiate -> Destantiate.Params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
+                    Instantiate -> Instantiate.params { template = Kobold; kInstanceName = "krakka${Random.nextInt(256)}"; register = instanceRegister }
+                    Destantiate -> Destantiate.params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
                         //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }

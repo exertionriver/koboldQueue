@@ -7,7 +7,7 @@ class ActionState(override val state: String, override val ordering: Int) : Comp
         val ActionPrepare = ActionState("actionPrepare", 2)
         val ActionExecute = ActionState("actionExecute", 3)
         val ActionRecover = ActionState("actionRecover", 4)
-        val ActionNotFound = ActionState("actionNotFound", 0)
+        val ActionStateNone = ActionState("actionStateNone", 0)
 
         val InProcess = listOf(ActionPrepare, ActionExecute, ActionRecover)
         val Interruptable = listOf(ActionPrepare, ActionExecute, ActionRecover)

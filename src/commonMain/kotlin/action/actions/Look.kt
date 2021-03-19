@@ -1,11 +1,10 @@
 package action.actions
 
+import ActionParamList
 import action.Action
-import action.ActionParamList
 import action.ActionPriority
-import action.param
-import action.roles.IInstantiable
 import action.roles.IObservable
+import param
 import templates.IInstance
 import templates.Register
 
@@ -26,7 +25,7 @@ object Look : Action(action = "look"
             LookParamList(lookParams).lookDescription()
         }
     ) {
-        class LookParamList(val kInstance: IInstance?, val register: Register?) {
+        class LookParamList(var kInstance: IInstance?, var register: Register?) {
 
             constructor(actionParamList: ActionParamList) : this(
                 kInstance = actionParamList.param<IInstance>(0)
@@ -39,11 +38,13 @@ object Look : Action(action = "look"
                 "IInstance named ${kInstanceNameOrT()} looks at IDescribable objects " +
                 "in Register ${registerOrT()}"
 
-            fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+            private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
-            fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
+            private fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
             fun actionParamList() = listOf(kInstance, register) as ActionParamList
         }
 
-    }
+    @ExperimentalUnsignedTypes
+    fun params(lambda: LookParamList.() -> Unit) = LookParamList().apply(lambda).actionParamList()
+}
