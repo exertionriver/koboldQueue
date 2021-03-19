@@ -19,7 +19,7 @@ object Destantiate : Action(action = "destantiate"
         return DestantiateParamList(destantiateParamList).destantiateDescription()
     }
 ) {
-    class DestantiateParamList(val kInstance : IInstance?, val register : Register?) {
+    class DestantiateParamList(var kInstance : IInstance?, var register : Register?) {
 
         constructor(actionParamList: ActionParamList) : this(
             kInstance = actionParamList.param<IInstance>(0)
@@ -29,10 +29,16 @@ object Destantiate : Action(action = "destantiate"
         constructor(nullConstructor : Nothing? = null) : this(kInstance = null, register = null)
 
         fun destantiateDescription() : String = "${Destantiate::class.simpleName} -> " +
-                "Destantiating ${kInstance?.getInstanceName() ?: String::class.simpleName} " +
-                "from Register ${register?.getInstanceName() ?: Register::class.simpleName}"
+                "Destantiating ${kInstanceNameOrT()} " +
+                "from Register ${registerNameOrT()}"
+
+        fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+
+        fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
         fun actionParamList() = listOf(kInstance, register) as ActionParamList
-
     }
+
+    @ExperimentalUnsignedTypes
+    fun Params(lambda: Destantiate.DestantiateParamList.() -> Unit) = Destantiate.DestantiateParamList().apply(lambda).actionParamList()
 }

@@ -69,7 +69,8 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
                 val actionParamList = when (extendedAction) {
                     Instantiate -> Instantiate.InstantiateParamList(Kobold, "krakka${Random.nextInt(256)}", instanceRegister).actionParamList()
-                    Destantiate -> Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
+                    Destantiate -> Destantiate.Params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
+                        //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
@@ -116,7 +117,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
         override fun getInstance(kInstanceName: String) = Cave(kInstanceName = kInstanceName)
 
-        override val templateName : String = Cave::class.simpleName!!
+        override fun getTemplateName() : String = Cave::class.simpleName!!
 
         val momentDuration = Moment(500*4)
 

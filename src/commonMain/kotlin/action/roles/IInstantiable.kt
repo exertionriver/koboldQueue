@@ -4,7 +4,7 @@ import templates.IInstance
 
 interface IInstantiable {
 
-    val templateName : String
+    fun getTemplateName() : String
 
     fun getInstance(kInstanceName : String) : IInstance
 

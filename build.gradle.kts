@@ -1,4 +1,5 @@
 import com.soywiz.korge.gradle.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
 	val korgePluginVersion: String by project

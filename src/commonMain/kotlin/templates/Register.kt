@@ -113,7 +113,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
 
     companion object : IInstantiable, IInstantiator {
 
-        override val templateName : String = Register::class.simpleName!!
+        override fun getTemplateName() : String = Register::class.simpleName!!
 
         override fun getInstance(kInstanceName: String) = Register(kInstanceName = kInstanceName)
 

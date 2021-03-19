@@ -23,9 +23,13 @@ object Idle : Action(action = "idle"
         constructor(nullConstructor : Nothing? = null) : this(kInstanceName = null, moments = null)
 
         fun idleDescription() : String = "${Idle::class.simpleName} -> " +
-                "IInstance named ${kInstanceName ?: String::class.simpleName} " +
-                "putters around for ${moments ?: Int::class.simpleName} moments"
+                "IInstance named ${kInstanceNameOrT()} " +
+                "putters around for ${momentsOrT()} moments"
 
-        fun actionParamList() = listOf(kInstanceName, moments) as ActionParamList
+        fun kInstanceNameOrT() = kInstanceName ?: String::class.simpleName
+
+        fun momentsOrT() = moments ?: Int::class.simpleName
+
+        fun actionParamList() : ActionParamList = listOf(kInstanceName, moments) as ActionParamList
     }
 }

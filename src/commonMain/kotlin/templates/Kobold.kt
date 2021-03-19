@@ -46,8 +46,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
                     when (it.key) {
-                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.LookParamList(kInstanceName, instanceRegister).actionParamList() )
-                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.ReflectParamList(kInstanceName).actionParamList() )
+                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.LookParamList(this@Kobold, instanceRegister).actionParamList() )
+                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.ReflectParamList(this@Kobold).actionParamList() )
                         else -> actionPlex.startAction(it.key, ActionPriority.BaseAction)
                     }
 //                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
@@ -64,8 +64,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
                 )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Look -> Look.LookParamList(kInstanceName, instanceRegister).actionParamList()
-                    Watch -> Watch.WatchParamList(kInstanceName, instanceRegister).actionParamList()
+                    Look -> Look.LookParamList(this@Kobold, instanceRegister).actionParamList()
+                    Watch -> Watch.WatchParamList(this@Kobold, instanceRegister).actionParamList()
                     else -> Idle.IdleParamList(kInstanceName, Probability(3,2).getValue().toInt()).actionParamList()
                 }
 
@@ -103,7 +103,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
     companion object : IInstantiable, IAction {
 
-        override val templateName : String = Kobold::class.simpleName!!
+        override fun getTemplateName() : String = Kobold::class.simpleName!!
 
         override fun getInstance(kInstanceName: String) = Kobold(kInstanceName = kInstanceName)
 

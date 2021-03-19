@@ -4,6 +4,7 @@ import action.Action
 import action.ActionParamList
 import action.ActionPriority
 import action.param
+import action.roles.IInstantiable
 import action.roles.IObservable
 import templates.IInstance
 import templates.Register
@@ -15,7 +16,7 @@ object Look : Action(action = "look"
         if (lookParams == null) return LookParamList().lookDescription()
 
         val lookObjects = LookParamList(lookParams).register!!.entries
-            .filterValues { (it is IInstance) && (it is IObservable) && (it.getInstanceName() != LookParamList(lookParams).kInstanceName) }
+            .filterValues { (it is IInstance) && (it is IObservable) && (it != LookParamList(lookParams).kInstance) }
 
         return if (!lookObjects.isNullOrEmpty() )
             LookParamList(lookParams).lookDescription().plus(": " +
@@ -25,20 +26,24 @@ object Look : Action(action = "look"
             LookParamList(lookParams).lookDescription()
         }
     ) {
-        class LookParamList(val kInstanceName: String?, val register: Register?) {
+        class LookParamList(val kInstance: IInstance?, val register: Register?) {
 
             constructor(actionParamList: ActionParamList) : this(
-                kInstanceName = actionParamList.param<String>(0)
+                kInstance = actionParamList.param<IInstance>(0)
                 , register = actionParamList.param<Register>(1)
             )
 
-            constructor(nullConstructor : Nothing? = null) : this(kInstanceName = null, register = null)
+            constructor(nullConstructor : Nothing? = null) : this(kInstance = null, register = null)
 
             fun lookDescription() : String = "${Look::class.simpleName} -> " +
-                "IInstance named ${kInstanceName ?: String::class.simpleName} looks at IDescribable objects " +
-                "in Register ${register?.getInstanceName() ?: Register::class.simpleName}"
+                "IInstance named ${kInstanceNameOrT()} looks at IDescribable objects " +
+                "in Register ${registerOrT()}"
 
-            fun actionParamList() = listOf(kInstanceName, register) as ActionParamList
+            fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
+
+            fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
+
+            fun actionParamList() = listOf(kInstance, register) as ActionParamList
         }
 
     }

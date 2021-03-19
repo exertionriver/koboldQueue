@@ -5,6 +5,7 @@ import action.ActionParamList
 import action.param
 import action.roles.IInstantiable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import templates.IInstance
 import templates.Register
 import kotlin.time.ExperimentalTime
 
@@ -33,9 +34,15 @@ object Instantiate : Action(action = "instantiate"
         constructor(nullConstructor : Nothing? = null) : this(template = null, kInstanceName = null, register = null)
 
         fun instantiateDescription() : String = "${Instantiate::class.simpleName} -> " +
-                "Instantiating ${template?.templateName ?: IInstantiable::class.simpleName} " +
-                "as IInstance named ${kInstanceName ?: String::class.simpleName} " +
-                "in Register ${register?.getInstanceName() ?: Register::class.simpleName}"
+                "Instantiating ${templateNameOrT()} " +
+                "as IInstance named ${kInstanceNameOrT()} " +
+                "in Register ${registerNameOrT()}"
+
+        fun templateNameOrT() = template?.getTemplateName() ?: IInstantiable::class.simpleName
+
+        fun kInstanceNameOrT() = kInstanceName ?: String::class.simpleName
+
+        fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
         fun actionParamList() = listOf(template, kInstanceName, register) as ActionParamList
     }
