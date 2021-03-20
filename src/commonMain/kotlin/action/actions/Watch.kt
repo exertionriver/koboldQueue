@@ -7,7 +7,7 @@ import templates.IInstance
 import templates.Register
 
 @ExperimentalUnsignedTypes
-object Watch : Action(action = "watch"
+object Watch : Action(actionLabel = "watch"
     , momentsToPrepare = 1, momentsToExecute = 3
     , actionType = ActionType.OneTimeExec
     , plexSlotsRequired = 2

@@ -7,7 +7,7 @@ import templates.IInstance
 import templates.Register
 
 @ExperimentalUnsignedTypes
-object Destantiate : Action(action = "destantiate"
+object Destantiate : Action(actionLabel = "destantiate"
     , description = fun () : String = DestantiateParamList().destantiateDescription()
     , executor = fun (destantiateParamList : ParamList?) : String {
         if (destantiateParamList == null) return DestantiateParamList().destantiateDescription()

@@ -2,10 +2,9 @@ package templates
 
 import ActionConditionsMap
 import time.Timer
-import ActionPlex
 import RegisterEntries
+import action.ActionPlex
 import action.actions.Instantiate
-import action.cancelAll
 import action.roles.IInstantiable
 import action.roles.IInstantiator
 import com.soywiz.korio.util.UUID
@@ -17,16 +16,16 @@ import registerChannel
 import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
 
-open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
+class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
 
     val entries : RegisterEntries = mutableMapOf()
 
  //   fun getEntries() = entries.toMap()
 
     @ExperimentalUnsignedTypes
-    override val actionPlex: ActionPlex = mutableMapOf()
+    override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())
 
-    override val maxPlexSize: Int = 16
+    override fun getMaxPlexSize(): Int = 16
 
     @ExperimentalUnsignedTypes
     @ExperimentalTime
@@ -105,7 +104,7 @@ open class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : Stri
  */       return@coroutineScope registerTimer
     }
 
-    override val moment = Moment(momentDuration.toLong())
+    override fun getMoment() = Moment(momentDuration.toLong())
 
     override fun getTemplate() = Companion
 

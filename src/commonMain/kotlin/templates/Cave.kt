@@ -1,7 +1,6 @@
 package templates
 
 import ActionConditionsMap
-import ActionPlex
 import RegisterEntries
 import action.*
 import action.actions.Destantiate
@@ -44,12 +43,12 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                 if (regData.first == instanceRegister.id) entries = regData.second.toMutableMap()
             }
 
-            momentCounter = (timer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+            momentCounter = (timer.getMillisecondsElapsed() / getMoment().milliseconds).toInt()
 
             if (momentCounter % 5 == 0) {
 
             //todo : another list for actions that take two slots
-            if (actionPlex.slotsInUse() < maxPlexSize) {
+            if (actionPlex.slotsInUse() < getMaxPlexSize()) {
 
                 val koboldInstances = entries.filterKeys { it is Kobold }.keys.toList() as List<Kobold>
 
@@ -77,15 +76,17 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                     else -> TODO("something else")
                 }
 
-                actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)
+                actionPlex.initAction(extendedAction, extendedAction.actionPriority, actionParamList)
 //                println("extended action started: ${extendedAction.action} by $kInstanceName at $timer" )
             }
 
-                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
-                RenderActionPlex.render(id, moment, actionPlex.getImMap())
-                delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
+                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
 
-                println("Cave $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${moment.milliseconds}")
+//                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
+                RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
+                delay(getMoment().milliseconds - checkTimer.getMillisecondsElapsed())
+
+                println("Cave $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${getMoment().milliseconds}")
 
 
       //      println("Cave $kInstanceName checktimer: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
@@ -104,11 +105,11 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
     override fun getDescription(): String = "spooky cave!"
 
-    override var actionPlex: ActionPlex = mutableMapOf()
+    override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())
 
-    override val maxPlexSize: Int = 1
+    override fun getMaxPlexSize() = 1
 
-    override val moment = momentDuration
+    override fun getMoment() = momentDuration
 
     override fun getTemplate() = Companion
 

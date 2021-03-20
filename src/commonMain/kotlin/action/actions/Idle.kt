@@ -6,7 +6,7 @@ import action.ActionPriority
 import param
 import templates.IInstance
 
-object Idle : Action(action = "idle"
+object Idle : Action(actionLabel = "idle"
     , actionPriority = ActionPriority.LowThird
     , description = fun () : String = IdleParamList().idleDescription()
     , executor = fun (idleParams : ParamList?) : String {

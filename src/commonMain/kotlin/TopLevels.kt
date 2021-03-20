@@ -33,11 +33,6 @@ typealias ActionExecutor = (actionParams : ParamList?) -> String?
 typealias ConditionDescription = () -> String
 typealias ConditionEvaluator = (conditionParams : ParamList?) -> Boolean?
 
-@ExperimentalUnsignedTypes
-typealias ActionPlex = MutableMap<UUID, StateAction> //slots to StateActions, max of maxPlexSize
-
-typealias ImActionPlex = Map<UUID, StateAction> //slots to StateActions, max of maxPlexSize
-
 typealias RegisterEntries = MutableMap<IInstance, Job>
 
 typealias ImRegisterEntries = Map<IInstance, Job>

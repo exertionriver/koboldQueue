@@ -6,7 +6,7 @@ import action.ActionPriority
 import param
 import templates.IInstance
 
-object Reflect : Action(action = "reflect"
+object Reflect : Action(actionLabel = "reflect"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = ReflectParamList().reflectDescription()
     , executor = fun (reflectParams : ParamList?) : String {

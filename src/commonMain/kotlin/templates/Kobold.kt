@@ -1,7 +1,6 @@
 package templates
 
 import ActionConditionsMap
-import ActionPlex
 import action.*
 import templates.*
 import com.soywiz.korio.util.UUID
@@ -43,21 +42,21 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
 //            println("Kobold $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()}, $momentCounter")
 
-            momentCounter = (timer.getMillisecondsElapsed() / moment.milliseconds).toInt()
+            momentCounter = (timer.getMillisecondsElapsed() / getMoment().milliseconds).toInt()
 
             Companion.baseActions.forEach {
                 if (!actionPlex.isBaseActionRunning(it.key) ) {
                     when (it.key) {
-                        Look -> actionPlex.startAction(it.key, ActionPriority.BaseAction,  Look.params { kInstance = this@Kobold; register = instanceRegister } )
-                        Reflect -> actionPlex.startAction(it.key, ActionPriority.BaseAction, Reflect.params { kInstance = this@Kobold } )
-                        else -> actionPlex.startAction(it.key, ActionPriority.BaseAction)
+                        Look -> actionPlex.initAction(it.key, ActionPriority.BaseAction,  Look.params { kInstance = this@Kobold; register = instanceRegister } )
+                        Reflect -> actionPlex.initAction(it.key, ActionPriority.BaseAction, Reflect.params { kInstance = this@Kobold } )
+                        else -> actionPlex.initAction(it.key, ActionPriority.BaseAction)
                     }
 //                    println("base action started: ${it.key.action} by $kInstanceName at $registerTimer" )
                 }
             }
 
             //todo : another list for actions that take two slots
-            if (actionPlex.slotsInUse() < maxPlexSize) {
+            if (actionPlex.slotsInUse() < getMaxPlexSize()) {
 
                 val extendedAction = ProbabilitySelect<Action>(mapOf(
                     Idle to Probability(70, 0)
@@ -71,17 +70,20 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
                     else -> Idle.params { kInstance = this@Kobold; moments = Probability(3,2).getValue().toInt() }
                 }
 
-                actionPlex.startAction(extendedAction, extendedAction.actionPriority, actionParamList)
+                actionPlex.initAction(extendedAction, extendedAction.actionPriority, actionParamList)
 
 //                println("extended action started: ${extendedAction.action} by $kInstanceName at $registerTimer" )
             }
 
-        actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
-        RenderActionPlex.render(id, moment, actionPlex.getImMap())
-//        println("Kobold $kInstanceName checktimer before: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
-        delay(moment.milliseconds - checkTimer.getMillisecondsElapsed())
+//        launch { actionPlex.perform() }
 
-        println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${moment.milliseconds}")
+        actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
+
+        RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
+//        println("Kobold $kInstanceName checktimer before: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
+        delay(getMoment().milliseconds - checkTimer.getMillisecondsElapsed())
+
+        println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${getMoment().milliseconds}")
 
 //        delay(GlobalTimer.mSecRenderDelay)
 
@@ -91,11 +93,11 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
      //   return@coroutineScope timer
     }
 
-    override var actionPlex: ActionPlex = mutableMapOf()
+    override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())
 
-    override val maxPlexSize: Int = 5
+    override fun getMaxPlexSize() = 5
 
-    override val moment = Moment(momentDuration.getValue().toLong())
+    override fun getMoment() = Moment(momentDuration.getValue().toLong())
 
     override fun getTemplate() = Companion
 

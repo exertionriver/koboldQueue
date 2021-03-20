@@ -1,6 +1,5 @@
 package render
 
-import ImActionPlex
 import RenderInstancePositionMap
 import RenderInstanceViewMap
 import action.ActionPriority.Companion.BaseAction
@@ -96,7 +95,7 @@ object RenderActionPlex {
     @ExperimentalCoroutinesApi
     @ExperimentalUnsignedTypes
     @ExperimentalTime
-    suspend fun renderInstance(instanceId : UUID, instanceName : String, instanceLocation : Int, instanceMoment: Moment, imActionPlex: ImActionPlex, startingPosition: Point) = coroutineScope {
+    suspend fun renderInstance(instanceId : UUID, instanceName : String, instanceLocation : Int, instanceMoment: Moment, actionPlexMap: Map<UUID, StateAction>, startingPosition: Point) = coroutineScope {
 
         val checkTimer = Timer()
 
@@ -118,7 +117,7 @@ object RenderActionPlex {
         // val instancePlex = state(pos.value.actionPlex)
 
         //instancePlex.collect
-        imActionPlex.forEach { slot ->
+        actionPlexMap.forEach { slot ->
 
             (1..slot.value.plexSlotsFilled).toList().forEach {
                 instanceViews.putAll(renderSlot(instanceId, slotIdx, slot.value, instanceMoment, renderPosition))
@@ -157,7 +156,7 @@ object RenderActionPlex {
 
         val xSlotPos = renderPos.x
         val ySlotPos = renderPos.y + 25 + slotIdx * 25
-        val fillText = stateAction.action.action
+        val fillText = stateAction.action.actionLabel
 
 
         val fillTextColor = when (stateAction.action) {
@@ -196,7 +195,7 @@ object RenderActionPlex {
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 @ExperimentalUnsignedTypes
-suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImActionPlex) = coroutineScope {
+suspend fun render(instanceId : UUID, instanceMoment: Moment, actionPlexMap: Map<UUID, StateAction>) = coroutineScope {
 
       //  println("container:$container, numChildren:${container.numChildren}, currentInstanceViews: ${currentInstanceViews.size}, children: ${container.children}")
 
@@ -231,7 +230,7 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, imActionPlex: ImAc
                 instanceName = renderInstanceEntry.value.getInstanceName(),
                 instanceLocation = renderInstanceEntry.key,
                 instanceMoment = instanceMoment,
-                imActionPlex = imActionPlex,
+                actionPlexMap = actionPlexMap,
                 startingPosition = startingPosition
             )
         )

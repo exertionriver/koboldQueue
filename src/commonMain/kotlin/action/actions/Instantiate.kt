@@ -11,7 +11,7 @@ import kotlin.time.ExperimentalTime
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalTime
-object Instantiate : Action(action = "instantiate"
+object Instantiate : Action(actionLabel = "instantiate"
     , description = fun () : String = InstantiateParamList().instantiateDescription()
     , executor = fun (instantiateParamList : ParamList?) : String {
         if (instantiateParamList == null) return InstantiateParamList().instantiateDescription()

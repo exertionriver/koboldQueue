@@ -1,6 +1,6 @@
 package templates
 
-import ActionPlex
+import action.ActionPlex
 import action.IActionPlex
 import com.soywiz.korio.util.UUID
 import time.Timer
@@ -17,9 +17,7 @@ interface IInstance : IActionPlex {
     suspend fun perform(registerTimer : Timer, instanceRegister : Register): Timer
 
     @ExperimentalUnsignedTypes
-    override val actionPlex: ActionPlex
-
-    override val moment: Moment
+    override var actionPlex: ActionPlex
 
     fun getTemplate() = object {}
 }

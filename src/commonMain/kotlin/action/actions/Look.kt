@@ -8,7 +8,7 @@ import param
 import templates.IInstance
 import templates.Register
 
-object Look : Action(action = "look"
+object Look : Action(actionLabel = "look"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = LookParamList().lookDescription()
     , executor = fun (lookParams : ParamList?) : String {
