@@ -1,6 +1,6 @@
 package action.actions
 
-import ActionParamList
+import ParamList
 import action.Action
 import action.ActionPriority
 import action.roles.IObservable
@@ -11,7 +11,7 @@ import templates.Register
 object Look : Action(action = "look"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = LookParamList().lookDescription()
-    , executor = fun (lookParams : ActionParamList?) : String {
+    , executor = fun (lookParams : ParamList?) : String {
         if (lookParams == null) return LookParamList().lookDescription()
 
         val lookObjects = LookParamList(lookParams).register!!.entries
@@ -27,7 +27,7 @@ object Look : Action(action = "look"
     ) {
         class LookParamList(var kInstance: IInstance?, var register: Register?) {
 
-            constructor(actionParamList: ActionParamList) : this(
+            constructor(actionParamList: ParamList) : this(
                 kInstance = actionParamList.param<IInstance>(0)
                 , register = actionParamList.param<Register>(1)
             )
@@ -42,7 +42,7 @@ object Look : Action(action = "look"
 
             private fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
-            fun actionParamList() = listOf(kInstance, register) as ActionParamList
+            fun actionParamList() = listOf(kInstance, register) as ParamList
         }
 
     @ExperimentalUnsignedTypes

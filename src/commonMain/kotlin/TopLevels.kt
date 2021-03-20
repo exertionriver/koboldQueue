@@ -23,13 +23,15 @@ suspend fun instantiate(lambda: Instantiate.InstantiateParamList.() -> Unit) = A
 suspend fun destantiate(lambda: Destantiate.DestantiateParamList.() -> Unit) = Action.Immediate.execute( action = Destantiate, actionParamList = Destantiate.DestantiateParamList()
     .apply(lambda).actionParamList() )
 
-inline fun <reified T> ActionParamList.param(index : Int) : T = if (this[index] is T) this[index] as T else throw IllegalArgumentException(this.toString())
+inline fun <reified T> ParamList.param(index : Int) : T = if (this[index] is T) this[index] as T else throw IllegalArgumentException(this.toString())
 
-typealias ActionParamList = List<Any>
+typealias ParamList = List<Any>
 typealias ActionConditionsMap = Map<Action, ConditionList?>
 
 typealias ActionDescription = () -> String
-typealias ActionExecutor = (actionParams : ActionParamList?) -> String?
+typealias ActionExecutor = (actionParams : ParamList?) -> String?
+typealias ConditionDescription = () -> String
+typealias ConditionEvaluator = (conditionParams : ParamList?) -> Boolean?
 
 @ExperimentalUnsignedTypes
 typealias ActionPlex = MutableMap<UUID, StateAction> //slots to StateActions, max of maxPlexSize
@@ -52,11 +54,5 @@ typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 typealias RenderInstanceViewMap = MutableMap<View, UUID>
 
 typealias ConditionList = List<Condition>
-typealias ConditionParamList = List<Any>
-typealias ConditionParamMap = Map<Condition, ConditionParamList?>
+typealias ConditionParamMap = Map<Condition, ParamList?>
 
-@ExperimentalUnsignedTypes
-@ExperimentalCoroutinesApi
-@ExperimentalTime
-suspend fun ConditionParamMap.evaluate() : Boolean =
-    this.map{ Condition.Immediate.evaluate(it.key, it.value) }.reduce{ result : Boolean, element -> result.and(element) }

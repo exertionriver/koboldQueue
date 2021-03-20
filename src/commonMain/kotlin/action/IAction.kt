@@ -1,14 +1,13 @@
 package action
 
 import ActionConditionsMap
-import ActionParamList
 import ConditionList
 import ConditionParamMap
+import ParamList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import condition.ISimpleCondition
-import condition.ISimpleCondition.Companion.Always
-import evaluate
+import condition.SimpleCondition.Always
 import kotlin.time.ExperimentalTime
 
 interface IAction : ISimpleCondition {
@@ -32,10 +31,10 @@ interface IAction : ISimpleCondition {
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
     @ExperimentalTime
-    suspend fun execute(action: Action, conditionParamMap : ConditionParamMap = mapOf(Always to null), actionParamList : ActionParamList? = null) = coroutineScope {
+    suspend fun execute(action: Action, conditionParamMap : ConditionParamMap = mapOf(Always to null), actionParamList : ParamList? = null) = coroutineScope {
 
         //evaluate conditionParameters if they exist; if these evaluate to true, run action
-        if ( conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() ) {
+        if (conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() == true) {
 
             action.executor(actionParamList)
 

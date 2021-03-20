@@ -1,6 +1,6 @@
 package action.actions
 
-import ActionParamList
+import ParamList
 import action.Action
 import action.roles.IInstantiable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,7 +13,7 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 object Instantiate : Action(action = "instantiate"
     , description = fun () : String = InstantiateParamList().instantiateDescription()
-    , executor = fun (instantiateParamList : ActionParamList?) : String {
+    , executor = fun (instantiateParamList : ParamList?) : String {
         if (instantiateParamList == null) return InstantiateParamList().instantiateDescription()
 
         InstantiateParamList(instantiateParamList).register!!.addInstance(
@@ -24,7 +24,7 @@ object Instantiate : Action(action = "instantiate"
 ) {
     class InstantiateParamList(var template : IInstantiable?, var kInstanceName : String?, var register : Register?) {
 
-        constructor(actionParamList: ActionParamList) : this(
+        constructor(actionParamList: ParamList) : this(
             template = actionParamList.param<IInstantiable>(0)
             , kInstanceName = actionParamList.param<String>(1)
             , register = actionParamList.param<Register>(2)
@@ -43,7 +43,7 @@ object Instantiate : Action(action = "instantiate"
 
         private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
-        fun actionParamList() = listOf(template, kInstanceName, register) as ActionParamList
+        fun actionParamList() = listOf(template, kInstanceName, register) as ParamList
     }
 
     @ExperimentalUnsignedTypes

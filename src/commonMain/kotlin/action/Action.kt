@@ -6,10 +6,9 @@ import action.ActionPriority.Companion.MediumSecond
 import action.ActionType.Companion.OneTimeExec
 import ActionDescription
 import ActionExecutor
-import ActionParamList
 import ActionPlex
 import ConditionParamMap
-import action.actions.Destantiate
+import ParamList
 import com.soywiz.korio.util.UUID
 import templates.Moment
 import kotlin.time.ExperimentalTime
@@ -46,7 +45,7 @@ open class Action(val action : String, val momentsToPrepare : Int = 2, val momen
     object Immediate : IAction {
 
         @ExperimentalCoroutinesApi
-        override suspend fun execute(action: Action, conditionParamMap: ConditionParamMap, actionParamList: ActionParamList?) = coroutineScope {
+        override suspend fun execute(action: Action, conditionParamMap: ConditionParamMap, actionParamList: ParamList?) = coroutineScope {
             super.execute(action, conditionParamMap, actionParamList)
 
             return@coroutineScope
@@ -58,6 +57,19 @@ open class Action(val action : String, val momentsToPrepare : Int = 2, val momen
 
     override fun equals(other: Any?): Boolean {
         return this.action == (other as Action).action
+    }
+
+    override fun hashCode(): Int {
+        var result = action.hashCode()
+        result = 31 * result + momentsToPrepare
+        result = 31 * result + momentsToExecute
+        result = 31 * result + momentsToRecover
+        result = 31 * result + plexSlotsRequired
+        result = 31 * result + actionType.hashCode()
+        result = 31 * result + actionPriority.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + executor.hashCode()
+        return result
     }
 
     companion object {
@@ -84,7 +96,7 @@ open class Action(val action : String, val momentsToPrepare : Int = 2, val momen
             return@coroutineScope actionPlex
         }
 
-        val ActionNone = Action(action = "none", description = fun() : String = "none", executor = fun(_: ActionParamList?) : String = "none")
+        val ActionNone = Action(action = "none", description = fun() : String = "none", executor = fun(_: ParamList?) : String = "none")
     }
 }
 

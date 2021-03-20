@@ -10,18 +10,17 @@ import state.ActionState.Companion.InProcess
 import state.ActionState.Companion.Interruptable
 import state.ActionState.Companion.Preemptable
 import action.ActionType.Companion.Continual
-import ActionParamList
 import ActionPlex
 import ConditionParamMap
 import action.actions.Idle
 import ImActionPlex
+import ParamList
 import action.Action.Companion.ActionNone
 import action.StateAction.Companion.StateActionNone
-import com.soywiz.korio.async.runBlockingNoSuspensions
 import com.soywiz.korio.util.UUID
+import condition.SimpleCondition.Always
 import templates.Moment
 import time.Timer
-import condition.ISimpleCondition.Companion.Always
 import state.ActionState
 import state.ActionState.Companion.ActionStateNone
 
@@ -63,7 +62,7 @@ fun ActionPlex.getAction(uuid: UUID) : Action = if (this[uuid] != null) this[uui
 fun ActionPlex.getActionState(uuid: UUID) : ActionState = if (this[uuid] != null) this[uuid]!!.actionState else ActionStateNone
 
 @ExperimentalUnsignedTypes
-fun ActionPlex.getActionParamList(uuid: UUID) : ActionParamList? = if (this[uuid] != null) this[uuid]!!.actionParamList else null
+fun ActionPlex.getActionParamList(uuid: UUID) : ParamList? = if (this[uuid] != null) this[uuid]!!.actionParamList else null
 
 @ExperimentalUnsignedTypes
 fun ActionPlex.getActionTimer(uuid : UUID) : Timer = if (this[uuid] != null) this[uuid]!!.timer else Timer()
@@ -82,7 +81,7 @@ fun ActionPlex.cycleState(uuid : UUID) {
 }
 
 @ExperimentalUnsignedTypes
-fun ActionPlex.startAction(action: Action, actionPriority: ActionPriority, actionParamList : ActionParamList? = null) {
+fun ActionPlex.startAction(action: Action, actionPriority: ActionPriority, actionParamList : ParamList? = null) {
     val actionUuid = UUID.randomUUID()
     when (actionPriority) {
         BaseAction -> this[actionUuid] = StateAction(Action(copyAction = action, updActionType = Continual), action.plexSlotsRequired, ActionQueue, actionPriority, actionParamList)

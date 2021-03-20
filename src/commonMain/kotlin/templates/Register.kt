@@ -11,7 +11,7 @@ import action.roles.IInstantiator
 import com.soywiz.korio.util.UUID
 import com.soywiz.korio.async.launch
 import com.soywiz.korio.async.runBlockingNoSuspensions
-import condition.ISimpleCondition.Companion.Always
+import condition.SimpleCondition.Always
 import kotlinx.coroutines.*
 import registerChannel
 import render.RenderActionPlex

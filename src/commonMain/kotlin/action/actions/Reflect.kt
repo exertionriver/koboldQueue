@@ -1,6 +1,6 @@
 package action.actions
 
-import ActionParamList
+import ParamList
 import action.Action
 import action.ActionPriority
 import param
@@ -9,14 +9,14 @@ import templates.IInstance
 object Reflect : Action(action = "reflect"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = ReflectParamList().reflectDescription()
-    , executor = fun (reflectParams : ActionParamList?) : String {
+    , executor = fun (reflectParams : ParamList?) : String {
         return if (reflectParams == null) ReflectParamList().reflectDescription()
         else ReflectParamList(reflectParams).reflectDescription()
     }
 ) {
     class ReflectParamList(var kInstance: IInstance?) {
 
-        constructor(actionParamList: ActionParamList) : this(
+        constructor(actionParamList: ParamList) : this(
             kInstance = actionParamList.param<IInstance>(0)
         )
 
@@ -27,7 +27,7 @@ object Reflect : Action(action = "reflect"
 
         private fun kInstanceNameOrT() = kInstance?.getInstanceName() ?: IInstance::class.simpleName
 
-        fun actionParamList() = listOf(kInstance) as ActionParamList
+        fun actionParamList() = listOf(kInstance) as ParamList
     }
 
     @ExperimentalUnsignedTypes

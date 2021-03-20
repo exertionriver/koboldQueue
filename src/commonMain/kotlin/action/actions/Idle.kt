@@ -1,6 +1,6 @@
 package action.actions
 
-import ActionParamList
+import ParamList
 import action.Action
 import action.ActionPriority
 import param
@@ -9,14 +9,14 @@ import templates.IInstance
 object Idle : Action(action = "idle"
     , actionPriority = ActionPriority.LowThird
     , description = fun () : String = IdleParamList().idleDescription()
-    , executor = fun (idleParams : ActionParamList?) : String {
+    , executor = fun (idleParams : ParamList?) : String {
         return if (idleParams == null) IdleParamList().idleDescription()
         else IdleParamList(idleParams).idleDescription()
     }
 ) {
     class IdleParamList(var kInstance : IInstance?, var moments : Int?) {
 
-        constructor(actionParamList: ActionParamList?) : this(
+        constructor(actionParamList: ParamList?) : this(
             kInstance = actionParamList?.param<IInstance>(0)
             , moments = actionParamList?.param<Int>(1)
         )
@@ -31,7 +31,7 @@ object Idle : Action(action = "idle"
 
         private fun momentsOrT() = moments ?: Int::class.simpleName
 
-        fun actionParamList() : ActionParamList = listOf(kInstance, moments) as ActionParamList
+        fun actionParamList() : ParamList = listOf(kInstance, moments) as ParamList
     }
 
     @ExperimentalUnsignedTypes

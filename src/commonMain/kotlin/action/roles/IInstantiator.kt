@@ -4,8 +4,8 @@ import ActionConditionsMap
 import action.*
 import action.actions.Destantiate
 import action.actions.Instantiate
-import condition.ISimpleCondition.Companion.Always
-import condition.ISimpleCondition.Companion.Never
+import condition.SimpleCondition.Always
+import condition.SimpleCondition.Never
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 

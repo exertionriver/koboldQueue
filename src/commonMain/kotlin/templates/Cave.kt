@@ -10,11 +10,11 @@ import action.roles.IInstantiable
 import action.roles.IInstantiator
 import templates.*
 import time.Timer
-import condition.ISimpleCondition
 import condition.Probability
 import condition.ProbabilitySelect
 import action.roles.IObservable
 import com.soywiz.korio.util.UUID
+import condition.SimpleCondition.Always
 import kotlinx.coroutines.*
 import registerChannel
 import render.RenderActionPlex
@@ -128,7 +128,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(
                 super.actions,
-                modMap = mapOf(Instantiate to listOf(ISimpleCondition.Always))
+                modMap = mapOf(Instantiate to listOf(Always))
             )
 
     }

@@ -14,10 +14,9 @@ import action.actions.Watch
 import action.roles.IInstantiable
 import action.roles.IObservable
 import com.soywiz.korge.internal.KorgeInternal
-import com.soywiz.korge.view.views
-import condition.ISimpleCondition.Companion.Always
 import condition.Probability
 import condition.ProbabilitySelect
+import condition.SimpleCondition.Always
 import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
 

@@ -1,13 +1,13 @@
 package action
 
-import ActionParamList
+import ParamList
 import action.Action.Companion.ActionNone
 import action.ActionPriority.Companion.ActionPriorityNone
 import state.ActionState
 import state.ActionState.Companion.ActionStateNone
 import time.Timer
 
-class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val actionState: ActionState = ActionStateNone, val actionPriority: ActionPriority = ActionPriorityNone, val actionParamList: ActionParamList? = null, val timer: Timer = Timer()) {
+class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val actionState: ActionState = ActionStateNone, val actionPriority: ActionPriority = ActionPriorityNone, val actionParamList: ParamList? = null, val timer: Timer = Timer()) {
 
     //update constructor
     constructor(copyStateAction : StateAction
@@ -15,7 +15,7 @@ class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val action
                 , updPlexSlotsFilled : Int = copyStateAction.plexSlotsFilled
                 , updActionState : ActionState = copyStateAction.actionState
                 , updActionPriority : ActionPriority = copyStateAction.actionPriority
-                , updActionParamList : ActionParamList? = copyStateAction.actionParamList
+                , updActionParamList : ParamList? = copyStateAction.actionParamList
                 , updTimer : Timer = copyStateAction.timer
     ) : this (
         action = updAction

@@ -1,7 +1,8 @@
 package condition
 
 import ConditionList
-import ConditionParamList
+import ConditionParamMap
+import ParamList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
@@ -14,7 +15,7 @@ interface ICondition {
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
     @ExperimentalTime
-    suspend fun evaluate(condition: Condition, conditionParamList : ConditionParamList? = null) : Boolean {
+    suspend fun evaluate(condition: Condition, conditionParamList : ParamList? = null) : Boolean? {
 
         val evalReturn = condition.evaluator(conditionParamList)
 
@@ -22,4 +23,12 @@ interface ICondition {
 
         return evalReturn
     }
+
+    @ExperimentalUnsignedTypes
+    @ExperimentalCoroutinesApi
+    @ExperimentalTime
+    suspend fun ConditionParamMap.evaluate() : Boolean? =
+        this.map{ Condition.Immediate.evaluate(it.key, it.value) }.reduce{ result : Boolean?
+                , element -> if (element != null) { result?.and(element) } else false
+        }
 }

@@ -1,6 +1,6 @@
 package action.actions
 
-import ActionParamList
+import ParamList
 import action.Action
 import param
 import templates.IInstance
@@ -9,7 +9,7 @@ import templates.Register
 @ExperimentalUnsignedTypes
 object Destantiate : Action(action = "destantiate"
     , description = fun () : String = DestantiateParamList().destantiateDescription()
-    , executor = fun (destantiateParamList : ActionParamList?) : String {
+    , executor = fun (destantiateParamList : ParamList?) : String {
         if (destantiateParamList == null) return DestantiateParamList().destantiateDescription()
 
         DestantiateParamList(destantiateParamList).register!!.removeInstance(
@@ -21,7 +21,7 @@ object Destantiate : Action(action = "destantiate"
 ) {
     class DestantiateParamList(var kInstance : IInstance?, var register : Register?) {
 
-        constructor(actionParamList: ActionParamList) : this(
+        constructor(actionParamList: ParamList) : this(
             kInstance = actionParamList.param<IInstance>(0)
             , register = actionParamList.param<Register>(1)
         )
@@ -36,7 +36,7 @@ object Destantiate : Action(action = "destantiate"
 
         private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
-        fun actionParamList() = listOf(kInstance, register) as ActionParamList
+        fun actionParamList() = listOf(kInstance, register) as ParamList
     }
 
     @ExperimentalUnsignedTypes
