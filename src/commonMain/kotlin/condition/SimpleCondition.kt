@@ -5,9 +5,9 @@ import param
 
 object SimpleCondition {
 
-    val Always = Condition(condition = "always", description = fun() = "Condition.Always -> true"
+    val Always = Condition(condition = "always", description = fun() = "${SimpleCondition::class.simpleName} -> Checking always == true"
         , evaluator = fun( _ : ParamList?) : Boolean = true)
-    val Never = Condition(condition = "never", description = fun() = "Condition.Always -> false"
+    val Never = Condition(condition = "never", description = fun() = "${SimpleCondition::class.simpleName} -> Checking never == false"
         , evaluator = fun( _ : ParamList?) : Boolean = false)
 
     class BinaryParamList(var first : Comparable<Any>?, var second : Comparable<Any>?, var operator : String?) {
