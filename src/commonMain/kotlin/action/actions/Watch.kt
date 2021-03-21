@@ -11,6 +11,7 @@ object Watch : Action(actionLabel = "watch"
     , momentsToPrepare = 1, momentsToExecute = 3
     , actionType = ActionType.OneTimeExec
     , plexSlotsRequired = 2
+    , maxParallel = 1
     , description = fun () : String = WatchParamList().watchDescription()
     , executor = fun (watchParams : ParamList?) : String {
         return if (watchParams == null) WatchParamList().watchDescription()

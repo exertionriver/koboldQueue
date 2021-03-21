@@ -67,7 +67,11 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
     @ExperimentalUnsignedTypes
     fun isBaseActionRunning(action: Action) : Boolean =
-        actionEntries.filterValues { stateAction ->  stateAction.action == action && stateAction.actionPriority == ActionPriority.BaseAction }.isNotEmpty()
+        actionEntries.filterValues { stateAction -> stateAction.action == action && stateAction.actionPriority == ActionPriority.BaseAction }.isNotEmpty()
+
+    @ExperimentalUnsignedTypes
+    fun numActionsRunning(action: Action) : Int =
+        actionEntries.filterValues { stateAction -> stateAction.action == action }.keys.size
 
     @ExperimentalUnsignedTypes
     fun getStateAction(stateActionUuid: UUID) : StateAction = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!! else StateAction.StateActionNone
@@ -112,16 +116,19 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
     @ExperimentalUnsignedTypes
     fun initAction(action: Action, actionPriority: ActionPriority, actionParamList : ParamList? = null, condition : Condition? = Always, conditionParamList : ParamList? = null) {
-        val newPlexActionUuid = UUID.randomUUID()
-        when (actionPriority) {
-            ActionPriority.BaseAction -> actionEntries[newPlexActionUuid] = StateAction(Action(copyAction = action, updActionType = ActionType.Continual), action.plexSlotsRequired,
-                ActionState.ActionQueue, actionPriority, actionParamList)
-            else -> actionEntries[newPlexActionUuid] = StateAction(action, action.plexSlotsRequired, ActionState.ActionQueue, actionPriority, actionParamList)
-        }
+        if (numActionsRunning(action) < action.maxParallel)  {
 
-        if (condition != null) {
-            conditionEntries[newPlexActionUuid] = StateCondition(condition, conditionParamList)
-        }
+            val newPlexActionUuid = UUID.randomUUID()
+            when (actionPriority) {
+                ActionPriority.BaseAction -> actionEntries[newPlexActionUuid] = StateAction(Action(copyAction = action, updActionType = ActionType.Continual), action.plexSlotsRequired,
+                    ActionState.ActionQueue, actionPriority, actionParamList)
+                else -> actionEntries[newPlexActionUuid] = StateAction(action, action.plexSlotsRequired, ActionState.ActionQueue, actionPriority, actionParamList)
+            }
+
+            if (condition != null) {
+                conditionEntries[newPlexActionUuid] = StateCondition(condition, conditionParamList)
+            }
+        } else println ("maxParallel reached for ${action.actionLabel}")
     }
 
     @ExperimentalUnsignedTypes

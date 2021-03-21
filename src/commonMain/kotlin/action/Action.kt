@@ -10,7 +10,7 @@ import ConditionParamMap
 import ParamList
 import kotlin.time.ExperimentalTime
 
-open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val momentsToExecute : Int = 3, val momentsToRecover : Int = 2, val plexSlotsRequired : Int = 1,
+open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val momentsToExecute : Int = 3, val momentsToRecover : Int = 2, val plexSlotsRequired : Int = 1, val maxParallel : Int = 2,
                   val actionType : ActionType = OneTimeExec, val actionPriority : ActionPriority = MediumSecond, val description : ActionDescription, val executor : ActionExecutor
 ) {
 
@@ -21,6 +21,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
                 , updMomentsToExecute : Int = copyAction.momentsToExecute
                 , updMomentsToRecover : Int = copyAction.momentsToRecover
                 , updPlexSlotsRequired: Int = copyAction.plexSlotsRequired
+                , updMaxParallel: Int = copyAction.maxParallel
                 , updActionType: ActionType = copyAction.actionType
                 , updActionPriority: ActionPriority = copyAction.actionPriority
                 , updDescription : ActionDescription = copyAction.description
@@ -31,6 +32,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
         , momentsToExecute = updMomentsToExecute
         , momentsToRecover = updMomentsToRecover
         , plexSlotsRequired = updPlexSlotsRequired
+        , maxParallel = updMaxParallel
         , actionType = updActionType
         , actionPriority = updActionPriority
         , description = updDescription
@@ -50,7 +52,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
 
     }
 
-    override fun toString() = "${Action::class.simpleName}($actionLabel, $momentsToPrepare, $momentsToExecute, $momentsToRecover, $plexSlotsRequired, $actionType, $actionPriority, $description, executor())"
+    override fun toString() = "${Action::class.simpleName}($actionLabel, $momentsToPrepare, $momentsToExecute, $momentsToRecover, $plexSlotsRequired, $maxParallel, $actionType, $actionPriority, $description, executor())"
 
     override fun equals(other: Any?): Boolean {
         return this.actionLabel == (other as Action).actionLabel
@@ -62,6 +64,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
         result = 31 * result + momentsToExecute
         result = 31 * result + momentsToRecover
         result = 31 * result + plexSlotsRequired
+        result = 31 * result + maxParallel
         result = 31 * result + actionType.hashCode()
         result = 31 * result + actionPriority.hashCode()
         result = 31 * result + description.hashCode()

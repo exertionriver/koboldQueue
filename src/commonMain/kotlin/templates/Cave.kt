@@ -59,7 +59,6 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
             //todo : another list for actions that take two slots
             if (actionPlex.slotsInUse() < getMaxPlexSize()) {
 
-
                 val extendedAction = if (numKobolds > 0)
                     if (numKobolds > 8)
                         ProbabilitySelect(mapOf(
@@ -80,21 +79,18 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
                 val actionParamList = when (extendedAction) {
                     Instantiate -> Instantiate.params { template = Kobold; kInstanceName = "krakka${Random.nextInt(256)}"; register = instanceRegister }
                     Destantiate -> Destantiate.params { kInstance = kobolds[Random.nextInt(numKobolds)]; register = instanceRegister }
-                        //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
                 val conditionParamList = when (extendedAction) {
                     Instantiate -> SimpleCondition.fparams { first = instanceRegister.getNumKobolds(); second = flow { emit(3) } }
                     Destantiate -> null //SimpleCondition.params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
-                    //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
                 val extendedCondition = when (extendedAction) {
                     Instantiate -> Lte
                     Destantiate -> Always
-                    //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
