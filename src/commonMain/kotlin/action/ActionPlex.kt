@@ -1,17 +1,15 @@
 package action
 
-import ConditionParamMap
 import ParamList
 import action.actions.Idle
 import com.soywiz.korio.util.UUID
 import condition.Condition
-import condition.SimpleCondition
 import condition.SimpleCondition.Always
 import condition.StateCondition
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import state.ActionState
-import templates.Moment
+import time.Moment
 import time.Timer
 import kotlin.time.ExperimentalTime
 
@@ -215,7 +213,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     @ExperimentalUnsignedTypes
     fun interrupt(slotsToInterrupt : Int) : Boolean {
 
-//    println("interrupt($slotsToInterrupt, $maxPlexSize)")
+    println("interrupt($slotsToInterrupt, $maxPlexSize)")
 
         var filledSlotsToInterrupt = slotsToInterrupt - slotsAvailable()
 
@@ -223,9 +221,9 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         val interruptables = actionEntries.filterValues { ActionState.Interruptable.contains(it.actionState) }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
 
-//    println("interruptables(${interruptables.size}):")
+    println("interruptables(${interruptables.size}):")
 
-//    interruptables.forEach { println("interruptable: $it") }
+    interruptables.forEach { println("interruptable: $it") }
 
         val interruptableFilledSlots = if (interruptables.isNullOrEmpty()) 0 else interruptables.map { it.second.plexSlotsFilled }.reduce{ result : Int, element -> result + element }
 
@@ -233,7 +231,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             for (interruptable in interruptables) {
                 if (filledSlotsToInterrupt <= 0) return true
 
-//            println("${interruptable.first} INTERRUPTED!")
+            println("${interruptable.first} INTERRUPTED!")
                 interruptAction(interruptable.first)
                 filledSlotsToInterrupt -= actionEntries[interruptable.first]!!.plexSlotsFilled
             }
@@ -310,6 +308,17 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 //            println("ActionPlex checktimer: ${checkTimer.getMillisecondsElapsed()}")
 
             return@coroutineScope actionPlex
+        }
+
+        @ExperimentalUnsignedTypes
+        @ExperimentalCoroutinesApi
+        @ExperimentalTime
+        fun interrupt(actionPlex: ActionPlex, numSlotsToInterrupt : Int) : ActionPlex  {
+
+            actionPlex.interrupt(numSlotsToInterrupt)
+//            println("ActionPlex checktimer: ${checkTimer.getMillisecondsElapsed()}")
+
+            return actionPlex
         }
 
     }

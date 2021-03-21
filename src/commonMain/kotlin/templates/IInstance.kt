@@ -12,6 +12,8 @@ interface IInstance : IActionPlex {
 
     fun getInstanceName(): String
 
+    var interrupted : Boolean
+
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     suspend fun perform(registerTimer : Timer, instanceRegister : Register): Timer

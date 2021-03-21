@@ -2,21 +2,20 @@ package templates
 
 import ActionConditionsMap
 import action.*
+import action.actions.*
 import templates.*
 import com.soywiz.korio.util.UUID
 import kotlinx.coroutines.*
 import time.Timer
-import action.actions.Idle
-import action.actions.Look
-import action.actions.Reflect
-import action.actions.Watch
 import action.roles.IInstantiable
 import action.roles.IObservable
 import com.soywiz.korge.internal.KorgeInternal
 import condition.Probability
 import condition.ProbabilitySelect
 import condition.SimpleCondition.Always
+import kotlinx.coroutines.flow.collect
 import render.RenderActionPlex
+import time.Moment
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -42,6 +41,10 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
 //            println("Kobold $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()}, $momentCounter")
 
+        lateinit var updRegister : Register
+
+        instanceRegister.getRegister().collect{ value -> updRegister = value }
+
             momentCounter = (timer.getMillisecondsElapsed() / getMoment().milliseconds).toInt()
 
             Companion.baseActions.forEach {
@@ -59,14 +62,16 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
             if (actionPlex.slotsInUse() < getMaxPlexSize()) {
 
                 val extendedAction = ProbabilitySelect<Action>(mapOf(
-                    Idle to Probability(70, 0)
+                    Idle to Probability(60, 0)
                     , Look to Probability(15,0)
                     , Watch to Probability(15,0)
+                    , Screech to Probability(10,0)
                 )).getSelectedProbability()!!
 
                 val actionParamList = when (extendedAction) {
-                    Look -> Look.params { kInstance = this@Kobold; register = instanceRegister }
-                    Watch -> Watch.params { kInstance = this@Kobold; register = instanceRegister }
+                    Look -> Look.params { kInstance = this@Kobold; register = updRegister }
+                    Watch -> Watch.params { kInstance = this@Kobold; register = updRegister }
+                    Screech -> Screech.params { kInstance = this@Kobold; register = updRegister }
                     else -> Idle.params { kInstance = this@Kobold; moments = Probability(3,2).getValue().toInt() }
                 }
 
@@ -77,9 +82,18 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
 //        launch { actionPlex.perform() }
 
-        actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
+        if (interrupted) {
+            println("Kobold interrupted! ${getInstanceName()}")
+            actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.interrupt(actionPlex, getMaxPlexSize()) }
+            RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap(), interrupted)
 
-        RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
+            interrupted = false
+        } else {
+            actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
+            RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
+        }
+
+
 //        println("Kobold $kInstanceName checktimer before: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
         delay(getMoment().milliseconds - checkTimer.getMillisecondsElapsed())
 
@@ -92,6 +106,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
      //   return@coroutineScope timer
     }
+
+    override var interrupted = false
 
     override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())
 

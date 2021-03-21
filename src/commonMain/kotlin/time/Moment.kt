@@ -1,4 +1,4 @@
-package templates
+package time
 
 class Moment(val milliseconds : Long) {
 

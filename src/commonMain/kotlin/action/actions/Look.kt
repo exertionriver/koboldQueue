@@ -15,11 +15,11 @@ object Look : Action(actionLabel = "look"
         if (lookParams == null) return LookParamList().lookDescription()
 
         val lookObjects = LookParamList(lookParams).register!!.entries
-            .filterValues { (it is IInstance) && (it is IObservable) && (it != LookParamList(lookParams).kInstance) }
+            .filterKeys { (it is IObservable) && (it != LookParamList(lookParams).kInstance) }
 
         return if (!lookObjects.isNullOrEmpty() )
             LookParamList(lookParams).lookDescription().plus(": " +
-                    lookObjects.map{ (it.value as IObservable).getDescription() }
+                    lookObjects.map{ (it.key as IObservable).getDescription() }
                         .reduce{ lookResult : String, element -> lookResult.plus(" $element") })
         else
             LookParamList(lookParams).lookDescription()

@@ -15,14 +15,13 @@ import action.roles.IObservable
 import com.soywiz.korio.util.UUID
 import condition.SimpleCondition
 import condition.SimpleCondition.Always
-import condition.SimpleCondition.Eq
 import condition.SimpleCondition.FlowEq
-import condition.SimpleCondition.Lt
 import condition.SimpleCondition.Lte
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import render.RenderActionPlex
+import time.Moment
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
@@ -120,6 +119,8 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
    //     return@coroutineScope timer
     }
+
+    override var interrupted = false
 
     override fun getDescription(): String = "spooky cave!"
 

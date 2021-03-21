@@ -3,6 +3,7 @@ package action.roles
 import ActionConditionsMap
 import action.actions.Idle
 import action.IAction
+import action.actions.Screech
 import kotlin.time.ExperimentalTime
 
 @ExperimentalUnsignedTypes
@@ -13,6 +14,7 @@ interface IIdlor : IAction {
         get() = super.actions.plus(
             mapOf(
                 Idle to null
+                , Screech to null
             )
         )
 

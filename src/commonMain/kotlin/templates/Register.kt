@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import registerChannel
 import render.RenderActionPlex
+import time.Moment
 import kotlin.time.ExperimentalTime
 
 class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
@@ -24,6 +25,14 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
     val entries : RegisterEntries = mutableMapOf()
 
  //   fun getEntries() = entries.toMap()
+
+    @ExperimentalUnsignedTypes
+    @ExperimentalTime
+    fun getRegister() : Flow<Register> {
+        return flow {
+            emit(this@Register)
+        }.flowOn(Dispatchers.Default)
+    }
 
     @ExperimentalUnsignedTypes
     @ExperimentalTime
@@ -130,6 +139,8 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
         //delay(mSecRenderDelay - registerTimer.getMillisecondsElapsed())
  */       return@coroutineScope registerTimer
     }
+
+    override var interrupted = false
 
     override fun getMoment() = Moment(momentDuration.toLong())
 
