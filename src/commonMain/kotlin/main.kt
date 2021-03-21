@@ -10,9 +10,10 @@ import kotlin.time.ExperimentalTime
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalTime
-suspend fun main() = Korge(width = 1024, height = 1024, bgcolor = Colors["#2b2b2b"]) {
+suspend fun main() = Korge(width = 1024, height = 1024) {
 
-	RenderActionPlex.container = containerRoot
+	RenderActionPlex.lateInit(containerRoot)
+
 //	GlobalChannel.initLogInfoChannel()
 
 	val globalReg = Register(kInstanceName = "testGlobalRegister")

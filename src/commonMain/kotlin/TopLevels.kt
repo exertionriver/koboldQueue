@@ -59,11 +59,9 @@ typealias RegisterData = Pair<UUID, ImRegisterEntries>
 @ExperimentalCoroutinesApi
 val registerChannel = Channel<RegisterData>(32)
 
-@ExperimentalUnsignedTypes
-typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 
 @ExperimentalUnsignedTypes
-typealias RenderInstanceViewMap = MutableMap<View, UUID>
+//typealias RenderInstanceViewMap = MutableMap<View, UUID>
 
 typealias ConditionList = List<Condition>
 typealias ConditionParamMap = Map<Condition, ParamList?>

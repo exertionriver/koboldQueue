@@ -7,6 +7,7 @@ import action.ActionPlex
 import action.actions.Instantiate
 import action.roles.IInstantiable
 import action.roles.IInstantiator
+import com.soywiz.korge.internal.KorgeInternal
 import com.soywiz.korio.util.UUID
 import com.soywiz.korio.async.launch
 import com.soywiz.korio.async.runBlockingNoSuspensions
@@ -74,16 +75,18 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
     @ExperimentalUnsignedTypes
     @ExperimentalTime
     @ExperimentalCoroutinesApi
-    fun startInstance(instance : IInstance, register : Register) : Job {
+    fun startInstance(kInstance : IInstance, register : Register) : Job {
 
-        RenderActionPlex.instances.put(RenderActionPlex.getOpenPosition(), instance)
+        RenderActionPlex.addInstance(kInstance)
 
         launch(CoroutineScope(Dispatchers.Default).coroutineContext) { registerChannel.send(Pair(register.id, register.entries.toMap())) }
 
-        return launch(CoroutineScope(Dispatchers.Default).coroutineContext) { while(true) instance.perform(Timer(), register) }
+        return launch(CoroutineScope(Dispatchers.Default).coroutineContext) { while(true) kInstance.perform(Timer(), register) }
     }
 
 
+    @ExperimentalCoroutinesApi
+    @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun removeInstance(kInstance : IInstance, register : Register) = runBlockingNoSuspensions {
 //        GlobalTimer.globalChannel.send("destantiated ${kInstance.getInstanceName()} in ${register.kInstanceName} ")
