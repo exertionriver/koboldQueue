@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import param
 import templates.IInstance
+import time.Timer
 
 object SimpleCondition {
 
@@ -133,11 +134,14 @@ object SimpleCondition {
         , evaluator = fun (eqParams : ParamList?) : Boolean {
             if (eqParams == null) return false
 
+            val checkTimer = Timer()
             val firstVar = BinaryFlowParamList(eqParams).getFirstVar()
-            println ("firstVar: $firstVar")
+            println ("firstVar: $firstVar, ${checkTimer.getMillisecondsElapsed()}")
 
             val secondVar = BinaryFlowParamList(eqParams).getSecondVar()
-            println ("secondVar: $secondVar")
+            println ("secondVar: $secondVar, ${checkTimer.getMillisecondsElapsed()}")
+
+            println (firstVar == secondVar)
 
             return firstVar == secondVar
         }

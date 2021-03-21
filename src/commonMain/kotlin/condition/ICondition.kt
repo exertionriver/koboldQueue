@@ -29,12 +29,15 @@ interface ICondition {
     @ExperimentalTime
     suspend fun ConditionParamMap.evaluate() : Boolean? {
 
-        this.forEach { println ("key : ${it.key}, value : ${it.value}, eval: ${Condition.Immediate.evaluate(it.key, it.value)}") }
-        return true
+        // this.forEach { println ("key : ${it.key}, value : ${it.value}, eval: ${Condition.Immediate.evaluate(it.key, it.value)}") }
+        // return true
+        //}
+
+
+        return this.map { Condition.Immediate.evaluate(it.key, it.value) }.reduce { result: Boolean?, element ->
+            if (element != null) {
+                result?.and(element)
+            } else false
+        }
     }
-
-
-//        this.map{ Condition.Immediate.evaluate(it.key, it.value) }.reduce{ result : Boolean?
-//                , element -> if (element != null) { result?.and(element) } else false
-//        }
 }
