@@ -4,7 +4,10 @@ import ConditionParamMap
 import ParamList
 import action.actions.Idle
 import com.soywiz.korio.util.UUID
+import condition.Condition
 import condition.SimpleCondition
+import condition.SimpleCondition.Always
+import condition.StateCondition
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import state.ActionState
@@ -15,19 +18,20 @@ import kotlin.time.ExperimentalTime
 class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : Int) {
 
     @ExperimentalUnsignedTypes
-    val entries : MutableMap<UUID, StateAction> = mutableMapOf() //slots to StateActions, max of maxPlexSize
+    val actionEntries : MutableMap<UUID, StateAction> = mutableMapOf() //slots to StateActions, max of maxPlexSize
+    val conditionEntries : MutableMap<UUID, StateCondition> = mutableMapOf() //conditions for respective actions
 
     @ExperimentalUnsignedTypes
-    fun getEntriesDisplaySortedMap() = entries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.actionState }
+    fun getEntriesDisplaySortedMap() = actionEntries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.actionState }
         .thenByDescending { it.second.timer.getMillisecondsElapsed() }).toMap()
 
     @ExperimentalUnsignedTypes
-    fun getEntriesPerformSortedMap() = entries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() })
+    fun getEntriesPerformSortedMap() = actionEntries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() })
 
     @ExperimentalUnsignedTypes
     fun slotsInUse() : Int {
 
-        val inProcessActions = entries.filterValues { plexAction -> ActionState.InProcess.contains(plexAction.actionState) }
+        val inProcessActions = actionEntries.filterValues { plexAction -> ActionState.InProcess.contains(plexAction.actionState) }
 
         return if (inProcessActions.isNullOrEmpty()) 0 else inProcessActions.map{ plexAction -> plexAction.value.plexSlotsFilled }.reduce{ slotsInUse : Int, plexActionSlotsFilled -> slotsInUse + plexActionSlotsFilled }
     }
@@ -49,72 +53,82 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun isActionPrepared(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionPrepare) &&
-            (momentsPassed(stateActionUuid) >= entries[stateActionUuid]!!.action.momentsToPrepare)
+            (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToPrepare)
 
     @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun isActionExecuted(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionExecute) &&
-            (momentsPassed(stateActionUuid) >= entries[stateActionUuid]!!.action.momentsToExecute)
+            (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToExecute)
 
     @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun isActionRecovered(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionRecover) &&
-            (momentsPassed(stateActionUuid) >= entries[stateActionUuid]!!.action.momentsToRecover)
+            (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToRecover)
 
     @ExperimentalUnsignedTypes
     fun isBaseActionRunning(action: Action) : Boolean =
-        entries.filterValues { stateAction ->  stateAction.action == action && stateAction.actionPriority == ActionPriority.BaseAction }.isNotEmpty()
+        actionEntries.filterValues { stateAction ->  stateAction.action == action && stateAction.actionPriority == ActionPriority.BaseAction }.isNotEmpty()
 
     @ExperimentalUnsignedTypes
-    fun getStateAction(stateActionUuid: UUID) : StateAction = if (entries[stateActionUuid] != null) entries[stateActionUuid]!! else StateAction.StateActionNone
+    fun getStateAction(stateActionUuid: UUID) : StateAction = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!! else StateAction.StateActionNone
 
     @ExperimentalUnsignedTypes
-    fun getAction(stateActionUuid: UUID) : Action = if (entries[stateActionUuid] != null) entries[stateActionUuid]!!.action else Action.ActionNone
+    fun getAction(stateActionUuid: UUID) : Action = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.action else Action.ActionNone
 
     @ExperimentalUnsignedTypes
-    fun getActionType(stateActionUuid: UUID) : ActionType = if (entries[stateActionUuid] != null) getAction(stateActionUuid).actionType else ActionType.OneTimeExec
+    fun getActionType(stateActionUuid: UUID) : ActionType = if (actionEntries[stateActionUuid] != null) getAction(stateActionUuid).actionType else ActionType.OneTimeExec
 
     @ExperimentalUnsignedTypes
-    fun getActionState(stateActionUuid: UUID) : ActionState = if (entries[stateActionUuid] != null) entries[stateActionUuid]!!.actionState else ActionState.ActionStateNone
+    fun getActionState(stateActionUuid: UUID) : ActionState = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionState else ActionState.ActionStateNone
 
     @ExperimentalUnsignedTypes
-    fun getActionPriority(stateActionUuid: UUID) : ActionPriority = if (entries[stateActionUuid] != null) entries[stateActionUuid]!!.actionPriority else ActionPriority.ActionPriorityNone
+    fun getActionPriority(stateActionUuid: UUID) : ActionPriority = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionPriority else ActionPriority.ActionPriorityNone
 
     @ExperimentalUnsignedTypes
-    fun getActionParamList(stateActionUuid: UUID) : ParamList? = if (entries[stateActionUuid] != null) entries[stateActionUuid]!!.actionParamList else null
+    fun getActionParamList(stateActionUuid: UUID) : ParamList? = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionParamList else null
 
     @ExperimentalUnsignedTypes
-    fun getActionTimer(stateActionUuid: UUID) : Timer = if (entries[stateActionUuid] != null) entries[stateActionUuid]!!.timer else Timer()
+    fun getActionTimer(stateActionUuid: UUID) : Timer = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.timer else Timer()
+
+    @ExperimentalUnsignedTypes
+    fun getCondition(stateActionUuid: UUID) : Condition = if (conditionEntries[stateActionUuid] != null) conditionEntries[stateActionUuid]!!.condition else Condition.ConditionNone
+
+    @ExperimentalUnsignedTypes
+    fun getConditionParamList(stateActionUuid: UUID) : ParamList? = if (conditionEntries[stateActionUuid] != null) conditionEntries[stateActionUuid]!!.conditionParamList else null
+
 
     @ExperimentalCoroutinesApi
     @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun cycleState(stateActionUuid : UUID) {
         when (getActionState(stateActionUuid) ) {
-            ActionState.ActionQueue -> entries[stateActionUuid] = StateAction(copyStateAction = entries[stateActionUuid]!!, updActionState = ActionState.ActionPrepare, updTimer = Timer())
-            ActionState.ActionPrepare -> entries[stateActionUuid] = StateAction(copyStateAction = entries[stateActionUuid]!!, updActionState = ActionState.ActionExecute, updTimer = Timer())
-            ActionState.ActionExecute -> entries[stateActionUuid] = StateAction(copyStateAction = entries[stateActionUuid]!!, updActionState = ActionState.ActionRecover, updTimer = Timer())
-            ActionState.ActionRecover -> entries[stateActionUuid] = StateAction(copyStateAction = entries[stateActionUuid]!!, updActionState = ActionState.ActionQueue, updTimer = Timer())
-            else -> entries[stateActionUuid] = StateAction(copyStateAction = entries[stateActionUuid]!!, updActionState = ActionState.ActionQueue)
+            ActionState.ActionQueue -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionPrepare, updTimer = Timer())
+            ActionState.ActionPrepare -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionExecute, updTimer = Timer())
+            ActionState.ActionExecute -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionRecover, updTimer = Timer())
+            ActionState.ActionRecover -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionQueue, updTimer = Timer())
+            else -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionQueue)
         }
     }
 
     @ExperimentalUnsignedTypes
-    fun initAction(action: Action, actionPriority: ActionPriority, actionParamList : ParamList? = null) {
+    fun initAction(action: Action, actionPriority: ActionPriority, actionParamList : ParamList? = null, condition : Condition? = Always, conditionParamList : ParamList? = null) {
         val newPlexActionUuid = UUID.randomUUID()
         when (actionPriority) {
-            ActionPriority.BaseAction -> entries[newPlexActionUuid] = StateAction(Action(copyAction = action, updActionType = ActionType.Continual), action.plexSlotsRequired,
+            ActionPriority.BaseAction -> actionEntries[newPlexActionUuid] = StateAction(Action(copyAction = action, updActionType = ActionType.Continual), action.plexSlotsRequired,
                 ActionState.ActionQueue, actionPriority, actionParamList)
-            else -> entries[newPlexActionUuid] = StateAction(action, action.plexSlotsRequired, ActionState.ActionQueue, actionPriority, actionParamList)
+            else -> actionEntries[newPlexActionUuid] = StateAction(action, action.plexSlotsRequired, ActionState.ActionQueue, actionPriority, actionParamList)
         }
 
+        if (condition != null) {
+            conditionEntries[newPlexActionUuid] = StateCondition(condition, conditionParamList)
+        }
     }
 
     @ExperimentalUnsignedTypes
-    fun cancelAction(stateActionUuid: UUID) = entries.remove(stateActionUuid)
+    fun cancelAction(stateActionUuid: UUID) = actionEntries.remove(stateActionUuid)
 
     @ExperimentalUnsignedTypes
-    fun cancelAll() = entries.clear()
+    fun cancelAll() = actionEntries.clear()
 
     @ExperimentalCoroutinesApi
     @ExperimentalTime
@@ -133,7 +147,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
         when (getActionState(stateActionUuid)) {
             ActionState.ActionQueue -> {
                 if ( preempt(stateActionUuid) ) cycleState(stateActionUuid)
-                else if ( getActionPriority(stateActionUuid) == ActionPriority.BaseAction && interrupt(entries[stateActionUuid]!!.action.plexSlotsRequired) ) cycleState(stateActionUuid)
+                else if ( getActionPriority(stateActionUuid) == ActionPriority.BaseAction && interrupt(actionEntries[stateActionUuid]!!.action.plexSlotsRequired) ) cycleState(stateActionUuid)
             }
             else -> cycleState(stateActionUuid)
         }
@@ -142,16 +156,18 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     @ExperimentalCoroutinesApi
     @ExperimentalTime
     @ExperimentalUnsignedTypes
-    suspend fun executeAction(stateActionUuid : UUID, conditionParamMap: ConditionParamMap = mapOf(SimpleCondition.Always to null)) {
+    suspend fun executeAction(stateActionUuid : UUID) {
         when (getActionState(stateActionUuid)) {
             ActionState.ActionPrepare -> {
                 cycleState(stateActionUuid)
 
-                Action.Immediate.execute(getAction(stateActionUuid), conditionParamMap, getActionParamList(stateActionUuid))
+                println("actionExec: ${getAction(stateActionUuid)}, ${getCondition(stateActionUuid)}, ${getConditionParamList(stateActionUuid)}")
+
+                Action.Immediate.execute(getAction(stateActionUuid), mapOf(Pair(getCondition(stateActionUuid), getConditionParamList(stateActionUuid))), getActionParamList(stateActionUuid))
 
                 //extend execution time by idle moments param
                 if ( getAction(stateActionUuid) == Idle) {
-                    entries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid)
+                    actionEntries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid)
                         , updAction = Action(getAction(stateActionUuid), updMomentsToExecute = Idle.IdleParamList(getActionParamList(stateActionUuid)!!).moments!! ) )
                 }
 
@@ -175,7 +191,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     fun interruptAction(stateActionUuid : UUID) {
         when (getActionState(stateActionUuid)) {
             ActionState.ActionExecute -> queueAction(stateActionUuid) //assess if there is penalty
-            ActionState.ActionRecover -> entries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid), updActionState = ActionState.ActionRecover, updTimer = Timer())    //restart recover
+            ActionState.ActionRecover -> actionEntries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid), updActionState = ActionState.ActionRecover, updTimer = Timer())    //restart recover
             else -> queueAction(stateActionUuid) //no penalty
         }
     }
@@ -184,7 +200,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     @ExperimentalTime
     @ExperimentalUnsignedTypes
     fun preemptAction(stateActionUuid : UUID) {
-        entries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid), updActionState = ActionState.ActionQueue, updTimer = Timer())
+        actionEntries[stateActionUuid] = StateAction(copyStateAction = getStateAction(stateActionUuid), updActionState = ActionState.ActionQueue, updTimer = Timer())
     }
 
     @ExperimentalCoroutinesApi
@@ -198,7 +214,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         if (filledSlotsToInterrupt <= 0 ) return true
 
-        val interruptables = entries.filterValues { ActionState.Interruptable.contains(it.actionState) }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
+        val interruptables = actionEntries.filterValues { ActionState.Interruptable.contains(it.actionState) }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
 
 //    println("interruptables(${interruptables.size}):")
 
@@ -212,7 +228,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
 //            println("${interruptable.first} INTERRUPTED!")
                 interruptAction(interruptable.first)
-                filledSlotsToInterrupt -= entries[interruptable.first]!!.plexSlotsFilled
+                filledSlotsToInterrupt -= actionEntries[interruptable.first]!!.plexSlotsFilled
             }
         }
         return false
@@ -231,7 +247,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         if (filledSlotsToPreempt <= 0) return true
 
-        val preemptables = entries.filterValues {
+        val preemptables = actionEntries.filterValues {
             ActionState.Preemptable.contains(it.actionState) && it.actionPriority > getActionPriority(stateActionUuid)
         }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
 
@@ -247,7 +263,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
             println("${preemptable.first} PREEMPTED!" )
                 preemptAction(preemptable.first)
-                filledSlotsToPreempt -= entries[preemptable.first]!!.plexSlotsFilled
+                filledSlotsToPreempt -= actionEntries[preemptable.first]!!.plexSlotsFilled
             }
         }
 
@@ -261,7 +277,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         returnState.add("slots in use: ${slotsInUse()}")
 
-        entries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() }).forEach{ returnState.add("${it.first}: ${it.second}") }
+        actionEntries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() }).forEach{ returnState.add("${it.first}: ${it.second}") }
 
         return returnState
     }

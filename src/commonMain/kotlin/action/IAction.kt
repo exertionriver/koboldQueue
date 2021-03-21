@@ -34,7 +34,8 @@ interface IAction : ISimpleCondition {
     suspend fun execute(action: Action, conditionParamMap : ConditionParamMap = mapOf(Always to null), actionParamList : ParamList? = null) = coroutineScope {
 
         //evaluate conditionParameters if they exist; if these evaluate to true, run action
-        if (conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() == true) {
+//        if (conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() == true) {
+        if (conditionParamMap.evaluate() == true) {
 
             action.executor(actionParamList)
 

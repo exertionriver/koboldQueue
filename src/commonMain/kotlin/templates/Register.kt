@@ -12,6 +12,9 @@ import com.soywiz.korio.async.launch
 import com.soywiz.korio.async.runBlockingNoSuspensions
 import condition.SimpleCondition.Always
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import registerChannel
 import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
@@ -21,6 +24,30 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
     val entries : RegisterEntries = mutableMapOf()
 
  //   fun getEntries() = entries.toMap()
+
+    @ExperimentalUnsignedTypes
+    @ExperimentalTime
+    fun getNumKobolds() : Flow<Int> {
+        return flow {
+            val numKobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList().size
+
+            println ("numKobolds : $numKobolds")
+
+            emit(numKobolds)
+        }.flowOn(Dispatchers.Default)
+    }
+
+    @ExperimentalUnsignedTypes
+    @ExperimentalTime
+    fun getKobolds() : Flow<List<IInstance>> {
+        return flow {
+            val kobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList()
+
+            println ("kobolds : $kobolds")
+
+            emit(kobolds)
+        }.flowOn(Dispatchers.Default)
+    }
 
     @ExperimentalUnsignedTypes
     override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())

@@ -199,7 +199,7 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, actionPlexMap: Map
 
       //  println("container:$container, numChildren:${container.numChildren}, currentInstanceViews: ${currentInstanceViews.size}, children: ${container.children}")
 
-        println("currentThreadId : ${com.soywiz.korio.lang.currentThreadId}")
+  //      println("currentThreadId : ${com.soywiz.korio.lang.currentThreadId}")
 
         val checkTimer = Timer()
 
@@ -222,7 +222,7 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, actionPlexMap: Map
             return@coroutineScope Timer()
         }
 
-        println("render @ ${ DateTime.now() } ${renderInstanceEntry.value.getInstanceName()} on $container")
+   //     println("render @ ${ DateTime.now() } ${renderInstanceEntry.value.getInstanceName()} on $container")
 
         instanceViews.putAll(
                 renderInstance(
@@ -247,6 +247,6 @@ suspend fun render(instanceId : UUID, instanceMoment: Moment, actionPlexMap: Map
    //     }
 //            pastInstanceViews.keys.forEach { if (container.children.contains(it)) container.removeChild(it) }
 
-            println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}")
+      //      println("RenderActionPlex @ ${DateTime.now()} CT:${checkTimer.getMillisecondsElapsed()}")
         }
 }

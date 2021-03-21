@@ -6,15 +6,15 @@ import ParamList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
-open class Condition(val condition : String, val description : ConditionDescription, val evaluator : ConditionEvaluator) {
+open class Condition(val conditionLabel: String, val description : ConditionDescription, val evaluator : ConditionEvaluator) {
 
     //update constructor
     constructor(copyCondition : Condition
-                , updCondition : String = copyCondition.condition
+                , updConditionLabel : String = copyCondition.conditionLabel
                 , updDescription : ConditionDescription = copyCondition.description
                 , updEvaluator : ConditionEvaluator = copyCondition.evaluator
     ) : this (
-        condition = updCondition
+        conditionLabel = updConditionLabel
         , description = updDescription
         , evaluator = updEvaluator
     )
@@ -28,21 +28,21 @@ open class Condition(val condition : String, val description : ConditionDescript
         }
     }
 
-    override fun toString() = "${Condition::class.simpleName}($condition, $description, evaluator())"
+    override fun toString() = "${Condition::class.simpleName}($conditionLabel, $description, evaluator())"
 
     override fun equals(other: Any?): Boolean {
-        return this.condition == (other as Condition).condition
+        return this.conditionLabel == (other as Condition).conditionLabel
     }
 
     override fun hashCode(): Int {
-        var result = condition.hashCode()
+        var result = conditionLabel.hashCode()
         result = 31 * result + description.hashCode()
         result = 31 * result + evaluator.hashCode()
         return result
     }
 
     companion object {
-        val ConditionNone = Condition(condition = "none", description = fun() : String = "none", evaluator = fun(_: ParamList?) : Boolean = false)
+        val ConditionNone = Condition(conditionLabel = "none", description = fun() : String = "none", evaluator = fun(_: ParamList?) : Boolean = false)
 
     }
 }

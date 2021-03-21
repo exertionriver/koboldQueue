@@ -16,7 +16,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
 
     //update constructor
     constructor(copyAction : Action
-                , updAction : String = copyAction.actionLabel
+                , updActionLabel : String = copyAction.actionLabel
                 , updMomentsToPrepare : Int = copyAction.momentsToPrepare
                 , updMomentsToExecute : Int = copyAction.momentsToExecute
                 , updMomentsToRecover : Int = copyAction.momentsToRecover
@@ -26,7 +26,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
                 , updDescription : ActionDescription = copyAction.description
                 , updExecutor : ActionExecutor = copyAction.executor
     ) : this (
-        actionLabel = updAction
+        actionLabel = updActionLabel
         , momentsToPrepare = updMomentsToPrepare
         , momentsToExecute = updMomentsToExecute
         , momentsToRecover = updMomentsToRecover

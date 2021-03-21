@@ -27,8 +27,14 @@ interface ICondition {
     @ExperimentalUnsignedTypes
     @ExperimentalCoroutinesApi
     @ExperimentalTime
-    suspend fun ConditionParamMap.evaluate() : Boolean? =
-        this.map{ Condition.Immediate.evaluate(it.key, it.value) }.reduce{ result : Boolean?
-                , element -> if (element != null) { result?.and(element) } else false
-        }
+    suspend fun ConditionParamMap.evaluate() : Boolean? {
+
+        this.forEach { println ("key : ${it.key}, value : ${it.value}, eval: ${Condition.Immediate.evaluate(it.key, it.value)}") }
+        return true
+    }
+
+
+//        this.map{ Condition.Immediate.evaluate(it.key, it.value) }.reduce{ result : Boolean?
+//                , element -> if (element != null) { result?.and(element) } else false
+//        }
 }

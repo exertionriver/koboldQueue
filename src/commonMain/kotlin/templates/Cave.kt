@@ -13,8 +13,13 @@ import condition.Probability
 import condition.ProbabilitySelect
 import action.roles.IObservable
 import com.soywiz.korio.util.UUID
+import condition.SimpleCondition
 import condition.SimpleCondition.Always
+import condition.SimpleCondition.FlowEq
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import registerChannel
 import render.RenderActionPlex
 import kotlin.random.Random
@@ -28,6 +33,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
     lateinit var entries : RegisterEntries
 
+    @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
@@ -37,31 +43,32 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
 //            println("Cave $kInstanceName perform @ ${ DateTime.now() } RT:${timer.getMillisecondsElapsed()} $momentCounter")
 
-            while (!registerChannel.isEmpty) {
-                val regData = registerChannel.receive()
+        var numKobolds = 0
 
-                if (regData.first == instanceRegister.id) entries = regData.second.toMutableMap()
-            }
+        lateinit var kobolds : List<IInstance>
 
-            momentCounter = (timer.getMillisecondsElapsed() / getMoment().milliseconds).toInt()
+        instanceRegister.getNumKobolds().collect{ value -> numKobolds = value }
+
+        instanceRegister.getKobolds().collect{ value -> kobolds = value }
+
+        momentCounter = (timer.getMillisecondsElapsed() / getMoment().milliseconds).toInt()
 
             if (momentCounter % 5 == 0) {
 
             //todo : another list for actions that take two slots
             if (actionPlex.slotsInUse() < getMaxPlexSize()) {
 
-                val koboldInstances = entries.filterKeys { it is Kobold }.keys.toList() as List<Kobold>
 
-                val extendedAction = if (koboldInstances.isNotEmpty())
-                    if (koboldInstances.size > 8)
+                val extendedAction = if (numKobolds > 0)
+                    if (numKobolds > 8)
                         ProbabilitySelect(mapOf(
                             Instantiate to Probability(0,0)
                             , Destantiate to Probability(100,0)
                         )).getSelectedProbability()!!
                     else
                         ProbabilitySelect(mapOf(
-                            Instantiate to Probability(80,0)
-                            , Destantiate to Probability(20,0)
+                            Instantiate to Probability(60,0)
+                            , Destantiate to Probability(40,0)
                         )).getSelectedProbability()!!
                 else
                     ProbabilitySelect(mapOf(
@@ -71,12 +78,26 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
                 val actionParamList = when (extendedAction) {
                     Instantiate -> Instantiate.params { template = Kobold; kInstanceName = "krakka${Random.nextInt(256)}"; register = instanceRegister }
-                    Destantiate -> Destantiate.params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
+                    Destantiate -> Destantiate.params { kInstance = kobolds[Random.nextInt(numKobolds)]; register = instanceRegister }
                         //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
                     else -> TODO("something else")
                 }
 
-                actionPlex.initAction(extendedAction, extendedAction.actionPriority, actionParamList)
+                val conditionParamList = when (extendedAction) {
+                    Instantiate -> SimpleCondition.fparams { first = instanceRegister.getNumKobolds(); second = flow { emit(3) } }
+                    Destantiate -> null //SimpleCondition.params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
+                    //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
+                    else -> TODO("something else")
+                }
+
+                val extendedCondition = when (extendedAction) {
+                    Instantiate -> FlowEq
+                    Destantiate -> Always
+                    //Destantiate.DestantiateParamList(koboldInstances[Random.nextInt(koboldInstances.size)], instanceRegister).actionParamList()
+                    else -> TODO("something else")
+                }
+
+                actionPlex.initAction(extendedAction, extendedAction.actionPriority, actionParamList, extendedCondition, conditionParamList)
 //                println("extended action started: ${extendedAction.action} by $kInstanceName at $timer" )
             }
 
@@ -125,11 +146,12 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
         val momentDuration = Moment(500*4)
 
+        @InternalCoroutinesApi
         @ExperimentalCoroutinesApi
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(
                 super.actions,
-                modMap = mapOf(Instantiate to listOf(Always))
+                modMap = mapOf(Instantiate to listOf(FlowEq))
             )
 
     }
