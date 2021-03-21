@@ -2,6 +2,7 @@ package condition
 
 import ParamList
 import com.soywiz.korio.async.*
+import fparam
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -17,12 +18,11 @@ object SimpleCondition {
     val Never = Condition(conditionLabel = "never", description = fun() = "${SimpleCondition::class.simpleName} -> Checking never == false"
         , evaluator = fun( _ : ParamList?) : Boolean = false)
 
-    class BinaryParamList(var first : Comparable<Any>?, var second : Comparable<Any>?, var operator : String?) {
+    class BinaryParamList(var first : Comparable<Any>?, var second : Comparable<Any>?, var operator : String? = null) {
 
         constructor(conditionParamList: ParamList) : this(
-            first = conditionParamList.param<Comparable<Any>>(0)
-            , second = conditionParamList.param<Comparable<Any>>(1)
-            , operator = conditionParamList.param<String>(2)
+            first = conditionParamList.fparam<Comparable<Any>>(0)
+            , second = conditionParamList.fparam<Comparable<Any>>(1)
         )
 
         constructor(nullConstructor : Nothing? = null, operator: String? = null) : this(first = null, second = null, operator = operator)
@@ -41,37 +41,7 @@ object SimpleCondition {
 
     class BinaryFlowParamList(var first : Flow<Any>?, var second : Flow<Any>?, var operator : String? = null) {
 
-        constructor(conditionParamList: ParamList) : this(
-            first = conditionParamList.param<Flow<Comparable<Any>>>(0)
-            , second = conditionParamList.param<Flow<Comparable<Any>>>(1)
-        )
-
         constructor(nullConstructor : Nothing? = null, operator: String? = null) : this(first = null, second = null, operator = operator)
-
-        fun description() : String = "${SimpleCondition::class.simpleName} -> " +
-                "Checking ${firstOrT()} ${operatorOrT()} ${secondOrT()}"
-
-        private fun firstOrT() = first ?: Comparable::class.simpleName
-
-        private fun secondOrT() = second ?: Comparable::class.simpleName
-
-        private fun operatorOrT() = operator ?: String::class.simpleName
-
-        fun getFirstVar() : Comparable<*> {
-            var firstVar : Comparable<*> = 0
-
-            while (!launchAsap(Dispatchers.Default) { first?.collect { value -> firstVar = value as Comparable<*>} }.isCompleted) {}
-
-            return firstVar
-        }
-
-        fun getSecondVar() : Comparable<*> {
-            var secondVar : Comparable<*> = 0
-
-            while (!launchAsap(Dispatchers.Default) { second?.collect { value -> secondVar = value as Comparable<*>} }.isCompleted) {}
-
-            return secondVar
-        }
 
         fun conditionParamList() = listOf(first, second) as ParamList
     }
@@ -135,10 +105,10 @@ object SimpleCondition {
             if (eqParams == null) return false
 
             val checkTimer = Timer()
-            val firstVar = BinaryFlowParamList(eqParams).getFirstVar()
+            val firstVar = BinaryParamList(eqParams).first
             println ("firstVar: $firstVar, ${checkTimer.getMillisecondsElapsed()}")
 
-            val secondVar = BinaryFlowParamList(eqParams).getSecondVar()
+            val secondVar = BinaryParamList(eqParams).second
             println ("secondVar: $secondVar, ${checkTimer.getMillisecondsElapsed()}")
 
             println (firstVar == secondVar)

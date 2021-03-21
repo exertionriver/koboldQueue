@@ -31,7 +31,7 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
         return flow {
             val numKobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList().size
 
-            println ("numKobolds : $numKobolds")
+ //           println ("numKobolds : $numKobolds")
 
             emit(numKobolds)
         }.flowOn(Dispatchers.Default)
@@ -43,7 +43,7 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
         return flow {
             val kobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList()
 
-            println ("kobolds : $kobolds")
+  //          println ("kobolds : $kobolds")
 
             emit(kobolds)
         }.flowOn(Dispatchers.Default)
