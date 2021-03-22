@@ -1,5 +1,5 @@
 # koboldQueue
-Demonstration of Kotlin entity-in/destantiation, action-queueing, and conditional execution using Kotlin coroutines and Korge Multiplatform Kotlin Game Engine
+Demonstration of template entity-in/destantiation, action-queueing, and conditional execution using Kotlin coroutines and Korge Multiplatform Kotlin Game Engine
 
 Built using IntelliJ Community Edition 2020.3.2 / Kotlin Plugin 1.4.31 on Ubuntu 20.04
 
