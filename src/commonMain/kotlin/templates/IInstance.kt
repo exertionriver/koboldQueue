@@ -3,9 +3,13 @@ package templates
 import action.ActionPlex
 import action.IActionPlex
 import com.soywiz.korio.util.UUID
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import time.Timer
 import kotlin.time.ExperimentalTime
 
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
+@ExperimentalTime
 interface IInstance : IActionPlex {
 
     fun getInstanceId(): UUID
@@ -14,11 +18,8 @@ interface IInstance : IActionPlex {
 
     var interrupted : Boolean
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    suspend fun perform(registerTimer : Timer, instanceRegister : Register): Timer
+    suspend fun perform(timer : Timer, instanceRegister : Register): Timer
 
-    @ExperimentalUnsignedTypes
     override var actionPlex: ActionPlex
 
     fun getTemplate() = object {}

@@ -3,10 +3,15 @@ package action.actions
 import ParamList
 import action.Action
 import action.ActionPriority
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import param
 import templates.IInstance
 import templates.Register
+import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
+@ExperimentalTime
+@ExperimentalUnsignedTypes
 object Screech : Action(actionLabel = "screech"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = ScreechParamList().screechDescription()
@@ -38,7 +43,7 @@ object Screech : Action(actionLabel = "screech"
                 , register = actionParamList.param<Register>(1)
             )
 
-            constructor(nullConstructor : Nothing? = null) : this(kInstance = null, register = null)
+            constructor() : this(kInstance = null, register = null)
 
             fun screechDescription() : String = "${Screech::class.simpleName} -> " +
                 "IInstance named ${kInstanceNameOrT()} screeches randomly " +
@@ -48,9 +53,9 @@ object Screech : Action(actionLabel = "screech"
 
             private fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
+            @Suppress("UNCHECKED_CAST")
             fun actionParamList() = listOf(kInstance, register) as ParamList
         }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: ScreechParamList.() -> Unit) = ScreechParamList().apply(lambda).actionParamList()
 }

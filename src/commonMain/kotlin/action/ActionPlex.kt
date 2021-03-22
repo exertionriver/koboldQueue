@@ -13,20 +13,19 @@ import time.Moment
 import time.Timer
 import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
 class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : Int) {
 
-    @ExperimentalUnsignedTypes
     val actionEntries : MutableMap<UUID, StateAction> = mutableMapOf() //slots to StateActions, max of maxPlexSize
     val conditionEntries : MutableMap<UUID, StateCondition> = mutableMapOf() //conditions for respective actions
 
-    @ExperimentalUnsignedTypes
     fun getEntriesDisplaySortedMap() = actionEntries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.actionState }
         .thenByDescending { it.second.timer.getMillisecondsElapsed() }).toMap()
 
-    @ExperimentalUnsignedTypes
     fun getEntriesPerformSortedMap() = actionEntries.toList().sortedWith (compareBy<Pair<UUID, StateAction>> { it.second.actionPriority }.thenByDescending { it.second.timer.getMillisecondsElapsed() })
 
-    @ExperimentalUnsignedTypes
     fun slotsInUse() : Int {
 
         val inProcessActions = actionEntries.filterValues { plexAction -> ActionState.InProcess.contains(plexAction.actionState) }
@@ -34,74 +33,48 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
         return if (inProcessActions.isNullOrEmpty()) 0 else inProcessActions.map{ plexAction -> plexAction.value.plexSlotsFilled }.reduce{ slotsInUse : Int, plexActionSlotsFilled -> slotsInUse + plexActionSlotsFilled }
     }
 
-    @ExperimentalUnsignedTypes
     fun slotsAvailable() : Int {
 
         return maxPlexSize - slotsInUse()
     }
 
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun momentsPassed(stateActionUuid : UUID) : Int = (getActionTimer(stateActionUuid).getMillisecondsElapsed() / moment.milliseconds).toInt()
 
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun isActionQueued(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionQueue)
 
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun isActionPrepared(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionPrepare) &&
             (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToPrepare)
 
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun isActionExecuted(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionExecute) &&
             (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToExecute)
 
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun isActionRecovered(stateActionUuid : UUID) = (getActionState(stateActionUuid) == ActionState.ActionRecover) &&
             (momentsPassed(stateActionUuid) >= actionEntries[stateActionUuid]!!.action.momentsToRecover)
 
-    @ExperimentalUnsignedTypes
     fun isBaseActionRunning(action: Action) : Boolean =
         actionEntries.filterValues { stateAction -> stateAction.action == action && stateAction.actionPriority == ActionPriority.BaseAction }.isNotEmpty()
 
-    @ExperimentalUnsignedTypes
     fun numActionsRunning(action: Action) : Int =
         actionEntries.filterValues { stateAction -> stateAction.action == action }.keys.size
 
-    @ExperimentalUnsignedTypes
     fun getStateAction(stateActionUuid: UUID) : StateAction = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!! else StateAction.StateActionNone
 
-    @ExperimentalUnsignedTypes
     fun getAction(stateActionUuid: UUID) : Action = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.action else Action.ActionNone
 
-    @ExperimentalUnsignedTypes
     fun getActionType(stateActionUuid: UUID) : ActionType = if (actionEntries[stateActionUuid] != null) getAction(stateActionUuid).actionType else ActionType.OneTimeExec
 
-    @ExperimentalUnsignedTypes
     fun getActionState(stateActionUuid: UUID) : ActionState = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionState else ActionState.ActionStateNone
 
-    @ExperimentalUnsignedTypes
     fun getActionPriority(stateActionUuid: UUID) : ActionPriority = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionPriority else ActionPriority.ActionPriorityNone
 
-    @ExperimentalUnsignedTypes
     fun getActionParamList(stateActionUuid: UUID) : ParamList? = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.actionParamList else null
 
-    @ExperimentalUnsignedTypes
     fun getActionTimer(stateActionUuid: UUID) : Timer = if (actionEntries[stateActionUuid] != null) actionEntries[stateActionUuid]!!.timer else Timer()
 
-    @ExperimentalUnsignedTypes
     fun getCondition(stateActionUuid: UUID) : Condition = if (conditionEntries[stateActionUuid] != null) conditionEntries[stateActionUuid]!!.condition else Condition.ConditionNone
 
-    @ExperimentalUnsignedTypes
     fun getConditionParamList(stateActionUuid: UUID) : ParamList? = if (conditionEntries[stateActionUuid] != null) conditionEntries[stateActionUuid]!!.conditionParamList else null
 
-
-    @ExperimentalCoroutinesApi
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun cycleState(stateActionUuid : UUID) {
         when (getActionState(stateActionUuid) ) {
             ActionState.ActionQueue -> actionEntries[stateActionUuid] = StateAction(copyStateAction = actionEntries[stateActionUuid]!!, updActionState = ActionState.ActionPrepare, updTimer = Timer())
@@ -112,7 +85,6 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
         }
     }
 
-    @ExperimentalUnsignedTypes
     fun initAction(action: Action, actionPriority: ActionPriority, actionParamList : ParamList? = null, condition : Condition? = Always, conditionParamList : ParamList? = null) {
         if (numActionsRunning(action) < action.maxParallel)  {
 
@@ -239,9 +211,6 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
         return false
     }
 
-    @ExperimentalCoroutinesApi
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
     fun preempt(stateActionUuid: UUID) : Boolean {
 
 //    println("preempt($actionPriority, $slotsToPreempt, $maxPlexSize)")
@@ -275,7 +244,6 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
         return false
     }
 
-    @ExperimentalUnsignedTypes
     fun stateString() : List<String> {
 
         val returnState = mutableListOf<String>()
@@ -288,9 +256,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     }
 
     companion object {
-        @ExperimentalCoroutinesApi
-        @ExperimentalTime
-        @ExperimentalUnsignedTypes
+
         suspend fun perform(actionPlex: ActionPlex) : ActionPlex = coroutineScope {
 
             //          val checkTimer = Timer()
@@ -310,9 +276,6 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             return@coroutineScope actionPlex
         }
 
-        @ExperimentalUnsignedTypes
-        @ExperimentalCoroutinesApi
-        @ExperimentalTime
         fun interrupt(actionPlex: ActionPlex, numSlotsToInterrupt : Int) : ActionPlex  {
 
             actionPlex.interrupt(numSlotsToInterrupt)

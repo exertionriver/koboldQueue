@@ -10,7 +10,11 @@ import kotlinx.coroutines.flow.collectLatest
 import param
 import templates.IInstance
 import time.Timer
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
 object SimpleCondition {
 
     val Always = Condition(conditionLabel = "always", description = fun() = "${SimpleCondition::class.simpleName} -> Checking always == true"
@@ -25,7 +29,7 @@ object SimpleCondition {
             , second = conditionParamList.fparam<Comparable<Any>>(1)
         )
 
-        constructor(nullConstructor : Nothing? = null, operator: String? = null) : this(first = null, second = null, operator = operator)
+        constructor(operator: String? = null) : this(first = null, second = null, operator = operator)
 
         fun description() : String = "${SimpleCondition::class.simpleName} -> " +
                 "Checking ${firstOrT()} ${operatorOrT()} ${secondOrT()}"
@@ -36,20 +40,20 @@ object SimpleCondition {
 
         private fun operatorOrT() = operator ?: String::class.simpleName
 
+        @Suppress("UNCHECKED_CAST")
         fun conditionParamList() = listOf(first, second) as ParamList
     }
 
     class BinaryFlowParamList(var first : Flow<Any>?, var second : Flow<Any>?, var operator : String? = null) {
 
-        constructor(nullConstructor : Nothing? = null, operator: String? = null) : this(first = null, second = null, operator = operator)
+        constructor(operator: String? = null) : this(first = null, second = null, operator = operator)
 
+        @Suppress("UNCHECKED_CAST")
         fun conditionParamList() = listOf(first, second) as ParamList
     }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: BinaryParamList.() -> Unit) = BinaryParamList().apply(lambda).conditionParamList()
 
-    @ExperimentalUnsignedTypes
     fun fparams(lambda: BinaryFlowParamList.() -> Unit) = BinaryFlowParamList().apply(lambda).conditionParamList()
 
     val Gt = Condition(conditionLabel = "simpleGreaterThan"

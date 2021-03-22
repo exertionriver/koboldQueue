@@ -19,6 +19,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
 class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceName : String) : IInstance, IObservable {
 
     override fun getDescription(): String = ProbabilitySelect(mapOf(
@@ -81,12 +82,12 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 
         if (interrupted) {
 //            println("Kobold interrupted! ${getInstanceName()}")
-            actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.interrupt(actionPlex, getMaxPlexSize()) }
+            actionPlex = withContext(RenderActionPlex.getCoroutineContext()) { ActionPlex.interrupt(actionPlex, getMaxPlexSize()) }
             RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap(), interrupted)
 
             interrupted = false
         } else {
-            actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
+            actionPlex = withContext(RenderActionPlex.getCoroutineContext()) { ActionPlex.perform(actionPlex) }
             RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
         }
 

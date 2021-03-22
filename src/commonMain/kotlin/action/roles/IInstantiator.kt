@@ -9,11 +9,11 @@ import condition.SimpleCondition.Never
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
+@ExperimentalUnsignedTypes
+@ExperimentalTime
 interface IInstantiator : IAction {
 
-    @ExperimentalCoroutinesApi
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
     override val actions: ActionConditionsMap
         get() = super.actions.plus(
             mapOf(

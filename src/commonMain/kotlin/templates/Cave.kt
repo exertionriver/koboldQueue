@@ -27,14 +27,14 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
 class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName: String) : IInstance, IObservable {
 
     var momentCounter = 0
 
     lateinit var entries : RegisterEntries
 
-    @InternalCoroutinesApi
-    @ExperimentalCoroutinesApi
+
     override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
         val checkTimer = Timer()
@@ -97,9 +97,8 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 //                println("extended action started: ${extendedAction.action} by $kInstanceName at $timer" )
             }
 
-                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.perform(actionPlex) }
+                actionPlex = withContext(RenderActionPlex.getCoroutineContext()) { ActionPlex.perform(actionPlex) }
 
-//                actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { Action.perform(actionPlex, moment, maxPlexSize) }
                 RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap())
                 delay(getMoment().milliseconds - checkTimer.getMillisecondsElapsed())
 

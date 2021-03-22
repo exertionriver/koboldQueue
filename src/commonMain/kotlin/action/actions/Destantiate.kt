@@ -18,7 +18,6 @@ object Destantiate : Action(actionLabel = "destantiate"
 
         DestantiateParamList(destantiateParamList).register!!.removeInstance(
             kInstance = DestantiateParamList(destantiateParamList).kInstance!!
-            , register = DestantiateParamList(destantiateParamList).register!!
         )
         return DestantiateParamList(destantiateParamList).destantiateDescription()
     }
@@ -30,7 +29,7 @@ object Destantiate : Action(actionLabel = "destantiate"
             , register = actionParamList.param<Register>(1)
         )
 
-        constructor(nullConstructor : Nothing? = null) : this(kInstance = null, register = null)
+        constructor() : this(kInstance = null, register = null)
 
         fun destantiateDescription() : String = "${Destantiate::class.simpleName} -> " +
                 "Destantiating ${kInstanceNameOrT()} " +
@@ -40,9 +39,9 @@ object Destantiate : Action(actionLabel = "destantiate"
 
         private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
+        @Suppress("UNCHECKED_CAST")
         fun actionParamList() = listOf(kInstance, register) as ParamList
     }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: DestantiateParamList.() -> Unit) = DestantiateParamList().apply(lambda).actionParamList()
 }

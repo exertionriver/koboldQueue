@@ -18,20 +18,19 @@ import render.RenderActionPlex
 import time.Moment
 import kotlin.time.ExperimentalTime
 
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
+@ExperimentalTime
 class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) : IInstance {
 
     val entries : RegisterEntries = mutableMapOf()
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
     fun getRegister() : Flow<Register> {
         return flow {
             emit(this@Register)
-        }.flowOn(Dispatchers.Default)
+        }.flowOn(RenderActionPlex.getDispatcher())
     }
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
     fun getNumKobolds() : Flow<Int> {
         return flow {
             val numKobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList().size
@@ -39,11 +38,9 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
  //           println ("numKobolds : $numKobolds")
 
             emit(numKobolds)
-        }.flowOn(Dispatchers.Default)
+        }.flowOn(RenderActionPlex.getDispatcher())
     }
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
     fun getKobolds() : Flow<List<IInstance>> {
         return flow {
             val kobolds = this@Register.entries.filterKeys { it is Kobold }.keys.toList()
@@ -51,38 +48,28 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
   //          println ("kobolds : $kobolds")
 
             emit(kobolds)
-        }.flowOn(Dispatchers.Default)
+        }.flowOn(RenderActionPlex.getDispatcher())
     }
 
-    @ExperimentalUnsignedTypes
     override var actionPlex = ActionPlex(getInstanceId(), getMoment(), getMaxPlexSize())
 
     override fun getMaxPlexSize(): Int = 16
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    @ExperimentalCoroutinesApi
+
     fun addInstance(instance : IInstance) { entries.put(instance, startInstance(instance, this)) }
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    @ExperimentalCoroutinesApi
+
     fun addInstance(kInstanceName : String, instanceTemplate : IInstantiable) { addInstance(instanceTemplate.getInstance(kInstanceName) ) }
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    @ExperimentalCoroutinesApi
+
     fun startInstance(kInstance : IInstance, register : Register) : Job {
 
         //add instance to renderer
         RenderActionPlex.addInstance(kInstance)
 
         //launch instance perform()
-        return launch(CoroutineScope(Dispatchers.Default).coroutineContext) { while(true) kInstance.perform(Timer(), register) }
+        return launch(RenderActionPlex.getCoroutineContext()) { while(true) kInstance.perform(Timer(), register) }
     }
 
-    @ExperimentalCoroutinesApi
-    @ExperimentalTime
-    @ExperimentalUnsignedTypes
-    fun removeInstance(kInstance : IInstance, register : Register) {
+    fun removeInstance(kInstance : IInstance) {
 //        println("entries before destantiation: $entries")
 //        println("actionPlex before destantiation: ${entries[kInstance.getInstanceName()]!!.actionPlex.stateString()}")
 
@@ -109,12 +96,9 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
 
     override fun toString() = "templates.Register($kInstanceName)"
 
-    @ExperimentalCoroutinesApi
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
-    override suspend fun perform(registerTimer : Timer, instanceRegister : Register) : Timer = coroutineScope {
+    override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
-        return@coroutineScope registerTimer
+        return@coroutineScope timer
     }
 
     override var interrupted = false
@@ -135,9 +119,6 @@ class Register (val id : UUID = UUID.randomUUID(), val kInstanceName : String) :
 
         val momentDuration = 200 //milliseconds
 
-        @ExperimentalCoroutinesApi
-        @ExperimentalUnsignedTypes
-        @ExperimentalTime
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(super.actions,
                 modMap = mapOf(Instantiate to listOf(Always))

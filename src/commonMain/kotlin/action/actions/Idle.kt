@@ -3,9 +3,14 @@ package action.actions
 import ParamList
 import action.Action
 import action.ActionPriority
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import param
 import templates.IInstance
+import kotlin.time.ExperimentalTime
 
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
+@ExperimentalTime
 object Idle : Action(actionLabel = "idle"
     , actionPriority = ActionPriority.LowThird
     , description = fun () : String = IdleParamList().idleDescription()
@@ -21,7 +26,7 @@ object Idle : Action(actionLabel = "idle"
             , moments = actionParamList?.param<Int>(1)
         )
 
-        constructor(nullConstructor : Nothing? = null) : this(kInstance = null, moments = null)
+        constructor() : this(kInstance = null, moments = null)
 
         fun idleDescription() : String = "${Idle::class.simpleName} -> " +
                 "IInstance named ${kInstanceNameOrT()} " +
@@ -31,9 +36,9 @@ object Idle : Action(actionLabel = "idle"
 
         private fun momentsOrT() = moments ?: Int::class.simpleName
 
+        @Suppress("UNCHECKED_CAST")
         fun actionParamList() : ParamList = listOf(kInstance, moments) as ParamList
     }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: IdleParamList.() -> Unit) = IdleParamList().apply(lambda).actionParamList()
 }

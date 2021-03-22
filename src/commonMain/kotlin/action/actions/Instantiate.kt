@@ -30,7 +30,7 @@ object Instantiate : Action(actionLabel = "instantiate"
             , register = actionParamList.param<Register>(2)
         )
 
-        constructor(nullConstructor : Nothing? = null) : this(template = null, kInstanceName = null, register = null)
+        constructor() : this(template = null, kInstanceName = null, register = null)
 
         fun instantiateDescription() : String = "${Instantiate::class.simpleName} -> " +
                 "Instantiating ${templateNameOrT()} " +
@@ -43,10 +43,10 @@ object Instantiate : Action(actionLabel = "instantiate"
 
         private fun registerNameOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
+        @Suppress("UNCHECKED_CAST")
         fun actionParamList() = listOf(template, kInstanceName, register) as ParamList
     }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: InstantiateParamList.() -> Unit) = InstantiateParamList().apply(lambda).actionParamList()
 
 }

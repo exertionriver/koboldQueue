@@ -15,15 +15,19 @@ import state.ActionState.Companion.ActionPrepare
 import state.ActionState.Companion.ActionRecover
 import action.StateAction
 import action.actions.*
+import com.soywiz.korinject.AsyncInjector
+import com.soywiz.korio.async.runBlockingNoSuspensions
 import templates.IInstance
 import time.Moment
 import time.Timer
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 
 typealias Slots = MutableMap<Int, View>
 
 typealias Queues = MutableMap<Int, Slots>
 
+@ExperimentalTime
 @ExperimentalUnsignedTypes
 typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 
@@ -53,7 +57,11 @@ object RenderActionPlex {
 
     var descriptionSlot = 0
 
-    fun lateInit(container: Container) {
+    //TODO: replace with Korge-friendly dispatcher / context
+    fun getDispatcher() = Dispatchers.Default
+    fun getCoroutineContext() = CoroutineScope(getDispatcher()).coroutineContext //views().coroutineContext
+
+    fun lateInit(container: Container) = runBlockingNoSuspensions {
 
         val startingPosition = Point(10, 50)
 
@@ -322,7 +330,7 @@ object RenderActionPlex {
     @ExperimentalUnsignedTypes
     suspend fun render(instanceId : UUID, instanceMoment: Moment, actionPlexMap: Map<UUID, StateAction>, interrupted : Boolean = false) = coroutineScope {
 
-        val checkTimer = Timer()
+     //   val checkTimer = Timer()
 
      //   val instanceViews: RenderInstanceViewMap = mutableMapOf()
 
@@ -358,7 +366,7 @@ object RenderActionPlex {
     @ExperimentalUnsignedTypes
     suspend fun renderDescription(renderText: String) = coroutineScope {
 
-        val checkTimer = Timer()
+   //     val checkTimer = Timer()
 
   //      println("renderText: $renderText @ slot: $descriptionSlot")
 

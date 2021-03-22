@@ -10,6 +10,9 @@ import ConditionParamMap
 import ParamList
 import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
+@ExperimentalUnsignedTypes
+@ExperimentalTime
 open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val momentsToExecute : Int = 3, val momentsToRecover : Int = 2, val plexSlotsRequired : Int = 1, val maxParallel : Int = 2,
                   val actionType : ActionType = OneTimeExec, val actionPriority : ActionPriority = MediumSecond, val description : ActionDescription, val executor : ActionExecutor
 ) {
@@ -39,8 +42,7 @@ open class Action(val actionLabel : String, val momentsToPrepare : Int = 2, val 
         , executor = updExecutor
     )
 
-    @ExperimentalUnsignedTypes
-    @ExperimentalTime
+
     object Immediate : IAction {
 
         @ExperimentalCoroutinesApi

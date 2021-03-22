@@ -5,6 +5,8 @@ import com.soywiz.korge.view.View
 import com.soywiz.korio.async.launch
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import render.RenderActionPlex
+import kotlin.time.ExperimentalTime
 
 
 //TODO: route debug info to logInfoChannel
@@ -31,10 +33,12 @@ object GlobalChannel {
 
     }
 
+    @ExperimentalUnsignedTypes
+    @ExperimentalTime
     @ExperimentalCoroutinesApi
     suspend fun initViewRemoveChannel() {
 
-        launch(CoroutineScope(Dispatchers.Default).coroutineContext) {
+        launch(RenderActionPlex.getCoroutineContext()) {
             while (true) {
                 while (!viewRemoveChannel.isEmpty) {
                     val viewToRemove = viewRemoveChannel.receive()

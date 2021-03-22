@@ -3,11 +3,16 @@ package action
 import ParamList
 import action.Action.Companion.ActionNone
 import action.ActionPriority.Companion.ActionPriorityNone
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import state.ActionState
 import state.ActionState.Companion.ActionStateNone
 import time.Timer
+import kotlin.time.ExperimentalTime
 
-class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val actionState: ActionState = ActionStateNone, val actionPriority: ActionPriority = ActionPriorityNone, val actionParamList: ParamList? = null, val timer: Timer = Timer()) {
+@ExperimentalTime
+@ExperimentalCoroutinesApi
+@ExperimentalUnsignedTypes
+class StateAction (val action : Action, val plexSlotsFilled : Int = 0, val actionState: ActionState = ActionStateNone, val actionPriority: ActionPriority = ActionPriorityNone, val actionParamList: ParamList? = null, val timer: Timer = Timer()) {
 
     //update constructor
     constructor(copyStateAction : StateAction
@@ -29,6 +34,7 @@ class StateAction(val action : Action, val plexSlotsFilled : Int = 0, val action
     override fun toString() = "${StateAction::class.simpleName}($action, $plexSlotsFilled, $actionState, $actionPriority, $actionParamList, $timer)"
 
     companion object {
+
         val StateActionNone = StateAction(ActionNone)
     }
 }

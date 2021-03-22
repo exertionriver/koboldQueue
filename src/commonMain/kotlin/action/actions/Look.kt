@@ -4,10 +4,15 @@ import ParamList
 import action.Action
 import action.ActionPriority
 import action.roles.IObservable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import param
 import templates.IInstance
 import templates.Register
+import kotlin.time.ExperimentalTime
 
+@ExperimentalUnsignedTypes
+@ExperimentalCoroutinesApi
+@ExperimentalTime
 object Look : Action(actionLabel = "look"
     , actionPriority = ActionPriority.LowSecond
     , description = fun () : String = LookParamList().lookDescription()
@@ -32,7 +37,7 @@ object Look : Action(actionLabel = "look"
                 , register = actionParamList.param<Register>(1)
             )
 
-            constructor(nullConstructor : Nothing? = null) : this(kInstance = null, register = null)
+            constructor() : this(kInstance = null, register = null)
 
             fun lookDescription() : String = "${Look::class.simpleName} -> " +
                 "IInstance named ${kInstanceNameOrT()} looks at IDescribable objects " +
@@ -42,9 +47,9 @@ object Look : Action(actionLabel = "look"
 
             private fun registerOrT() = register?.getInstanceName() ?: Register::class.simpleName
 
+            @Suppress("UNCHECKED_CAST")
             fun actionParamList() = listOf(kInstance, register) as ParamList
         }
 
-    @ExperimentalUnsignedTypes
     fun params(lambda: LookParamList.() -> Unit) = LookParamList().apply(lambda).actionParamList()
 }

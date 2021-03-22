@@ -9,11 +9,14 @@ import condition.SimpleCondition.Lt
 import condition.SimpleCondition.Lte
 import condition.SimpleCondition.Neq
 import condition.SimpleCondition.Never
-import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
+@ExperimentalUnsignedTypes
+@ExperimentalTime
 interface ISimpleCondition : ICondition {
 
-    @InternalCoroutinesApi
     override val conditions : ConditionList
         get() = super.conditions.plus(
             listOf(

@@ -4,8 +4,10 @@ import ActionConditionsMap
 import action.actions.Idle
 import action.IAction
 import action.actions.Screech
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalTime
 interface IIdlor : IAction {
