@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import condition.ISimpleCondition
 import condition.SimpleCondition.Always
+import render.RenderActionPlex
 import kotlin.time.ExperimentalTime
 
 interface IAction : ISimpleCondition {
@@ -37,9 +38,9 @@ interface IAction : ISimpleCondition {
 //        if (conditionParamMap.filterKeys { getActionConditionList(action).contains(it) }.evaluate() == true) {
         if (conditionParamMap.evaluate() == true) {
 
-            action.executor(actionParamList)
+            val description = action.executor(actionParamList)
 
- //           GlobalChannel.logInfoChannel.send("exec return @ ${ DateTime.now() } ${action.executor(actionParamList)}")
+            RenderActionPlex.renderDescription(description!!)
         }
 
         return@coroutineScope

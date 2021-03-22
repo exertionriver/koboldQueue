@@ -126,7 +126,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             if (condition != null) {
                 conditionEntries[newPlexActionUuid] = StateCondition(condition, conditionParamList)
             }
-        } else println ("maxParallel reached for ${action.actionLabel}")
+        } //else println ("maxParallel reached for ${action.actionLabel}")
     }
 
     @ExperimentalUnsignedTypes
@@ -166,7 +166,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             ActionState.ActionPrepare -> {
                 cycleState(stateActionUuid)
 
-                println("actionExec: ${getAction(stateActionUuid)}, ${getCondition(stateActionUuid)}, ${getConditionParamList(stateActionUuid)}")
+//                println("actionExec: ${getAction(stateActionUuid)}, ${getCondition(stateActionUuid)}, ${getConditionParamList(stateActionUuid)}")
 
                 Action.Immediate.execute(getAction(stateActionUuid), mapOf(Pair(getCondition(stateActionUuid), getConditionParamList(stateActionUuid))), getActionParamList(stateActionUuid))
 
@@ -213,7 +213,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
     @ExperimentalUnsignedTypes
     fun interrupt(slotsToInterrupt : Int) : Boolean {
 
-    println("interrupt($slotsToInterrupt, $maxPlexSize)")
+//    println("interrupt($slotsToInterrupt, $maxPlexSize)")
 
         var filledSlotsToInterrupt = slotsToInterrupt - slotsAvailable()
 
@@ -221,9 +221,9 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         val interruptables = actionEntries.filterValues { ActionState.Interruptable.contains(it.actionState) }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
 
-    println("interruptables(${interruptables.size}):")
+//    println("interruptables(${interruptables.size}):")
 
-    interruptables.forEach { println("interruptable: $it") }
+//    interruptables.forEach { println("interruptable: $it") }
 
         val interruptableFilledSlots = if (interruptables.isNullOrEmpty()) 0 else interruptables.map { it.second.plexSlotsFilled }.reduce{ result : Int, element -> result + element }
 
@@ -231,7 +231,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             for (interruptable in interruptables) {
                 if (filledSlotsToInterrupt <= 0) return true
 
-            println("${interruptable.first} INTERRUPTED!")
+  //          println("${interruptable.first} INTERRUPTED!")
                 interruptAction(interruptable.first)
                 filledSlotsToInterrupt -= actionEntries[interruptable.first]!!.plexSlotsFilled
             }
@@ -248,7 +248,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
 
         var filledSlotsToPreempt = getStateAction(stateActionUuid).action.plexSlotsRequired - slotsAvailable()
 
-    println("filled slots to preempt:${filledSlotsToPreempt}")
+//    println("filled slots to preempt:${filledSlotsToPreempt}")
 
         if (filledSlotsToPreempt <= 0) return true
 
@@ -256,9 +256,9 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             ActionState.Preemptable.contains(it.actionState) && it.actionPriority > getActionPriority(stateActionUuid)
         }.toList().sortedWith (compareByDescending <Pair<UUID, StateAction>> { it.second.actionPriority }.thenBy { it.second.timer.getMillisecondsElapsed() })
 
-    println("preemptables(${preemptables.size}):")
+//    println("preemptables(${preemptables.size}):")
 
-    preemptables.forEach { println("preemptable: $it") }
+//    preemptables.forEach { println("preemptable: $it") }
 
         val preemptableFilledSlots = if (preemptables.isNullOrEmpty()) 0 else preemptables.map { it.second.plexSlotsFilled }.reduce{ result : Int, element -> result + element }
 
@@ -266,7 +266,7 @@ class ActionPlex(val instanceID : UUID, val moment : Moment, val maxPlexSize : I
             for (preemptable in preemptables) {
                 if (filledSlotsToPreempt <= 0) return true
 
-            println("${preemptable.first} PREEMPTED!" )
+  //          println("${preemptable.first} PREEMPTED!" )
                 preemptAction(preemptable.first)
                 filledSlotsToPreempt -= actionEntries[preemptable.first]!!.plexSlotsFilled
             }

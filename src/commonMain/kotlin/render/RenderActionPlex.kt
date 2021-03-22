@@ -1,7 +1,6 @@
 package render
 
 import action.ActionPriority.Companion.BaseAction
-import com.soywiz.korge.internal.KorgeInternal
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.Colors
 import com.soywiz.korim.font.BitmapFont
@@ -11,19 +10,20 @@ import com.soywiz.korim.text.TextAlignment
 import com.soywiz.korio.util.UUID
 import com.soywiz.korma.geom.Point
 import kotlinx.coroutines.*
-import state.ActionState
 import state.ActionState.Companion.ActionExecute
 import state.ActionState.Companion.ActionPrepare
 import state.ActionState.Companion.ActionRecover
 import action.StateAction
 import action.actions.*
-import com.soywiz.korge.ui.defaultUIFont
 import templates.IInstance
 import time.Moment
 import time.Timer
 import kotlin.time.ExperimentalTime
 
-typealias Slot = MutableMap<Int, View>
+typealias Slots = MutableMap<Int, View>
+
+typealias Queues = MutableMap<Int, Slots>
+
 @ExperimentalUnsignedTypes
 typealias RenderInstancePositionMap = MutableMap<Int, IInstance>
 
@@ -35,22 +35,27 @@ object RenderActionPlex {
     @ExperimentalUnsignedTypes
     val instances: RenderInstancePositionMap = mutableMapOf()
 
-    val renderHeaders : MutableMap<Int, View> = mutableMapOf()
+    val renderHeaders : Slots = mutableMapOf()
 
-    val renderSlotsBg : MutableMap<Int, Slot> = mutableMapOf()
+    val renderSlotsBg : Queues = mutableMapOf()
 
-    val renderSlotsFg : MutableMap<Int, Slot> = mutableMapOf()
+    val renderSlotsFg : Queues = mutableMapOf()
 
-    val renderSlotsText : MutableMap<Int, Slot> = mutableMapOf()
+    val renderSlotsText : Queues = mutableMapOf()
 
     val fancyPaint = LinearGradientPaint(0, 0, 0, 50).add(0.0, Colors.CADETBLUE).add(1.0, Colors.PURPLE)
 
     val fancyFont = BitmapFont(DefaultTtfFont, 64.0, paint = fancyPaint)
 
+    val descriptionTextSlots : Slots = mutableMapOf()
+
+    val descriptions : MutableMap<Int, String> = mutableMapOf()
+
+    var descriptionSlot = 0
 
     fun lateInit(container: Container) {
 
-        val startingPosition = Point(50, 50)
+        val startingPosition = Point(10, 50)
 
         val xOffset = 150
         val yOffset = 300
@@ -64,7 +69,7 @@ object RenderActionPlex {
         //fill 12 background slot rects
         (0..11).toList().forEach { queueIdx ->
             renderSlotsBg[queueIdx] =
-                (0..7).toList().associate {slotIdx -> let {slotIdx to container.roundRect(80, 20, 1, 1, fill = Colors["#eaeaea"].withA(80))
+                (0..7).toList().associate {slotIdx -> let {slotIdx to container.roundRect(80, 20, 1, 1, fill = Colors["#727170"].withA(80))
                     .position(startingPosition.x + (queueIdx % 6) * xOffset, startingPosition.y + (queueIdx / 6) * yOffset + (slotIdx + 1) * 25)
                 }
             }.toMutableMap()
@@ -73,7 +78,7 @@ object RenderActionPlex {
         //fill 12 foreground slot rects
         (0..11).toList().forEach { queueIdx ->
             renderSlotsFg[queueIdx] =
-                (0..7).toList().associate {slotIdx -> let {slotIdx to container.roundRect(80, 20, 1, 1, fill = Colors["#eaeaea"])
+                (0..7).toList().associate {slotIdx -> let {slotIdx to container.roundRect(80, 20, 1, 1, fill = Colors["#727170"])
                     .position(startingPosition.x + (queueIdx % 6) * xOffset, startingPosition.y + (queueIdx / 6) * yOffset + (slotIdx + 1) * 25)
                 }
             }.toMutableMap()
@@ -82,12 +87,95 @@ object RenderActionPlex {
         //fill 12 slot texts
         (0..11).toList().forEach { queueIdx ->
             renderSlotsText[queueIdx] =
-                (0..7).toList().associate {slotIdx -> let {slotIdx to container.text("init", textSize = 14.0, color = Colors["#3e3e3e"])
+                (0..7).toList().associate {slotIdx -> let {slotIdx to container.text("init", textSize = 14.0, color = Colors["#b9c3ff"])//Colors["#3e3e3e"])
                     .position(startingPosition.x + (queueIdx % 6) * xOffset + 10, startingPosition.y + (queueIdx / 6) * yOffset + (slotIdx + 1) * 25)
                 }
-                }.toMutableMap()
+            }.toMutableMap()
         }
 
+        //fill 12 exec description text slots
+        (0..11).toList().forEach { headerIdx -> descriptionTextSlots.put(headerIdx, container.text(text = "description",
+            font = fancyFont, textSize = 18.0, alignment = TextAlignment.BASELINE_LEFT
+            ).position(startingPosition.x +10, startingPosition.y + 2 * yOffset + 25 * headerIdx))
+        }
+
+        //fill 12 exec description text slots
+        (0..11).toList().forEach { headerIdx -> descriptions.put(headerIdx, "description") }
+
+        //guide boxes
+        container.text(text = "instance", font = fancyFont, textSize = 24.0, alignment = TextAlignment.BASELINE_LEFT
+        ).position(startingPosition.x + 6 * xOffset, startingPosition.y)
+
+        var slotIdx = 0
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#727170"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("queued", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#00b600"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("prepared", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#100be0"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("executed", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#e00508"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("recovered", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#727170"].withA(180))
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.roundRect(40, 20, 1, 1, fill = Colors["#727170"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("queueing", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#00b600"].withA(180))
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.roundRect(40, 20, 1, 1, fill = Colors["#00b600"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("preparing", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#100be0"].withA(180))
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.roundRect(40, 20, 1, 1, fill = Colors["#100be0"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("executing", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        slotIdx++
+
+        container.roundRect(80, 20, 1, 1, fill = Colors["#e00508"].withA(180))
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.roundRect(40, 20, 1, 1, fill = Colors["#e00508"])
+            .position(startingPosition.x + 6 * xOffset, startingPosition.y + (slotIdx + 1) * 25)
+        container.text("recovering", textSize = 14.0, color = Colors["#b9c3ff"])
+            .position(startingPosition.x + 6 * xOffset + 10, startingPosition.y + (slotIdx + 1) * 25)
+
+        // reset queue boxes for run
+        clearQueues()
+        clearDescriptions()
+    }
+
+    fun clearQueues() {
         (0..11).toList().forEach { queueIdx -> clearQueue(queueIdx) }
     }
 
@@ -108,6 +196,18 @@ object RenderActionPlex {
         renderSlotsText[queueIdx]!![slotIdx]!!.setText("empty")
     }
 
+    fun clearDescriptions() {
+
+        (0..11).toList().forEach { slotIdx -> clearDescription(slotIdx) }
+    }
+
+    fun clearDescription(slotIdx : Int) {
+
+        descriptions[slotIdx] = ""
+        descriptionTextSlots[slotIdx]!!.colorMul = Colors.BLACK
+        descriptionTextSlots[slotIdx]!!.setText(descriptions[slotIdx]!!)
+    }
+
     fun renderQueue(queueIdx : Int, instanceName : String, instanceMoment : Moment, actionPlexMap: Map<UUID, StateAction>, interrupted: Boolean) {
 
         renderHeaders[queueIdx]!!.colorMul = Colors.CADETBLUE
@@ -115,12 +215,23 @@ object RenderActionPlex {
 
         var slotIdx = 0
 
+     //   println("rendering instance: $instanceName")
+
         actionPlexMap.forEach { slot ->
             (1..slot.value.plexSlotsFilled).toList().forEach {
-                if (slotIdx > 7) return
-                else renderSlot(queueIdx, slotIdx, instanceMoment, slot.value, interrupted)
+                if (slotIdx <= 7) renderSlot(queueIdx, slotIdx, instanceMoment, slot.value, interrupted)
+ //               println(slot.value)
                 slotIdx++
             }
+        }
+
+  //      println("slots rendered : $slotIdx")
+
+   //     println("slots remaining to clear: ${7-slotIdx}")
+
+        //clean up remaining slots
+        (slotIdx..7).toList().forEach { clearIdx ->
+            clearSlot(queueIdx, clearIdx)
         }
     }
 
@@ -135,7 +246,7 @@ object RenderActionPlex {
             else -> momentsElapsed / (momentsElapsed + 1) //Zeno's queue
         }
 
-        if (percentFilled > 1) println("percentFilled overflow : $percentFilled for moment ${instanceMoment.milliseconds} $stateAction")
+//        if (percentFilled > 1) println("percentFilled overflow : $percentFilled for moment ${instanceMoment.milliseconds} $stateAction")
 
         val renderPercentFilled = if (percentFilled > 1) 1.0 else percentFilled
 
@@ -143,30 +254,24 @@ object RenderActionPlex {
 
         val fillText = stateAction.action.actionLabel
 
+//        println("interrupted: $interrupted, stateAction.actionPriority == BaseAction: ${stateAction.actionPriority == BaseAction}")
+
         val fillTextColor = when (interrupted) {
             true -> Colors["#171717"]
-            false -> when (stateAction.action) {
-                Instantiate -> Colors["#37f585"]
-                Destantiate -> Colors["#f58858"]
-                Look -> Colors["#b9c3ff"]
-                Watch -> Colors["#7978ff"]
-                Reflect -> Colors["#4542ff"]
-                Idle -> Colors["#f4ff1c"]
-                else -> Colors["#f4ff1c"]
-            }
+            false -> Colors["#b9c3ff"]
         }
 
         val fillColor = when (interrupted) {
             true -> Colors["#eaeaea"]
-            false -> when (stateAction.actionPriority) {
-                BaseAction -> when (stateAction.actionState) {
+            false -> when (stateAction.actionPriority == BaseAction) {
+                true -> when (stateAction.actionState) {
                     ActionPrepare -> Colors["#006c00"]
                     ActionExecute -> Colors["#080a6c"]
                     ActionRecover -> Colors["#6c0604"]
                     else -> Colors["#434241"]
                 }
-                else -> when (stateAction.actionState) {
-                    ActionPrepare -> Colors["#00db00"]
+                false -> when (stateAction.actionState) {
+                    ActionPrepare -> Colors["#00b600"]
                     ActionExecute -> Colors["#100be0"]
                     ActionRecover -> Colors["#e00508"]
                     else -> Colors["#727170"]
@@ -174,9 +279,11 @@ object RenderActionPlex {
             }
         }
 
+//        println("stateAction.actionState: ${stateAction.actionState}, fillTextColor: $fillTextColor, fillColor: $fillColor")
+
         renderSlotsBg[queueIdx]!![slotIdx]!!.colorMul = fillColor.withA(180)
         renderSlotsFg[queueIdx]!![slotIdx]!!.colorMul = fillColor
-        renderSlotsFg[queueIdx]!![slotIdx]!!.width = 80.0 * percentFilled
+        renderSlotsFg[queueIdx]!![slotIdx]!!.scaledWidth = 80.0 * renderPercentFilled
         renderSlotsText[queueIdx]!![slotIdx]!!.colorMul = fillTextColor
         renderSlotsText[queueIdx]!![slotIdx]!!.setText(fillText)
     }
@@ -210,7 +317,6 @@ object RenderActionPlex {
         instances.remove(instanceQueue)
     }
 
-    @KorgeInternal
     @ExperimentalCoroutinesApi
     @ExperimentalTime
     @ExperimentalUnsignedTypes
@@ -237,4 +343,41 @@ object RenderActionPlex {
 
         return@coroutineScope
     }
+
+    fun scrollUp() {
+
+        (1..11).toList().forEach { descriptionSlotIdx ->
+            descriptions[descriptionSlotIdx - 1] = descriptions[descriptionSlotIdx]!!
+        }
+
+        descriptions[11] = ""
+    }
+
+    @ExperimentalCoroutinesApi
+    @ExperimentalTime
+    @ExperimentalUnsignedTypes
+    suspend fun renderDescription(renderText: String) = coroutineScope {
+
+        val checkTimer = Timer()
+
+        println("renderText: $renderText @ slot: $descriptionSlot")
+
+        descriptions[descriptionSlot++] = renderText
+
+        if (descriptionSlot > 11) {
+            descriptionSlot = 11
+            scrollUp()
+        }
+
+        if (descriptionSlot < 11) {
+            descriptionTextSlots[descriptionSlot]!!.colorMul = Colors["#b9c3ff"]
+        }
+
+        (0..descriptionSlot).toList().forEach { descriptionSlotIdx ->
+            descriptionTextSlots[descriptionSlotIdx].setText(descriptions[descriptionSlotIdx]!!)
+        }
+
+        return@coroutineScope
+    }
+
 }

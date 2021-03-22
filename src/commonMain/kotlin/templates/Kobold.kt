@@ -9,7 +9,6 @@ import kotlinx.coroutines.*
 import time.Timer
 import action.roles.IInstantiable
 import action.roles.IObservable
-import com.soywiz.korge.internal.KorgeInternal
 import condition.Probability
 import condition.ProbabilitySelect
 import condition.SimpleCondition.Always
@@ -28,10 +27,8 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
         ,"scaly Kobold!" to Probability(30)
     )).getSelectedProbability()!!
 
-
     var momentCounter = 0
 
-    @KorgeInternal
     @ExperimentalCoroutinesApi
     override suspend fun perform(timer : Timer, instanceRegister : Register) : Timer = coroutineScope {
 
@@ -83,7 +80,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 //        launch { actionPlex.perform() }
 
         if (interrupted) {
-            println("Kobold interrupted! ${getInstanceName()}")
+//            println("Kobold interrupted! ${getInstanceName()}")
             actionPlex = withContext(CoroutineScope(Dispatchers.Default).coroutineContext) { ActionPlex.interrupt(actionPlex, getMaxPlexSize()) }
             RenderActionPlex.render(id, getMoment(), actionPlex.getEntriesDisplaySortedMap(), interrupted)
 
@@ -97,7 +94,7 @@ class Kobold(private val id : UUID = UUID.randomUUID(), private val kInstanceNam
 //        println("Kobold $kInstanceName checktimer before: ${checkTimer.getMillisecondsElapsed()} $momentCounter")
         delay(getMoment().milliseconds - checkTimer.getMillisecondsElapsed())
 
-        println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${getMoment().milliseconds}")
+//        println("Kobold $kInstanceName checktimer after: ${checkTimer.getMillisecondsElapsed()} ${getMoment().milliseconds}")
 
 //        delay(GlobalTimer.mSecRenderDelay)
 

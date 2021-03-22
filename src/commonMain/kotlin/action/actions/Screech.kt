@@ -13,20 +13,20 @@ object Screech : Action(actionLabel = "screech"
     , executor = fun (screechParams : ParamList?) : String {
         if (screechParams == null) return ScreechParamList().screechDescription()
 
-        println ("screeching!")
+//        println ("screeching!")
 
         val screechObjects = ScreechParamList(screechParams).register!!.entries
             .filterKeys { (it != ScreechParamList(screechParams).kInstance) }
 
-        println ( "entries: ${ScreechParamList(screechParams).register!!.entries}")
-        println ( "objs: ${screechObjects.keys}")
+//        println ( "entries: ${ScreechParamList(screechParams).register!!.entries}")
+//        println ( "objs: ${screechObjects.keys}")
 
-        screechObjects.forEach { it.key.interrupted = true; println ("interrupting ${it.key.getInstanceName()}") }
+        screechObjects.forEach { it.key.interrupted = true; }//println ("interrupting ${it.key.getInstanceName()}") }
 
         return if (!screechObjects.isNullOrEmpty() )
             ScreechParamList(screechParams).screechDescription().plus(": " +
                     screechObjects.map{ it.key.getInstanceName() }
-                        .reduce{ lookResult : String, element -> lookResult.plus(" $element") })
+                        .reduce{ lookResult : String, element -> lookResult.plus(" $element") }).plus (" affected")
         else
             ScreechParamList(screechParams).screechDescription()
         }
