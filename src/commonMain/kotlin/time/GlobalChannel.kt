@@ -1,16 +1,13 @@
 package time
 
 import com.soywiz.klock.DateTime
-import com.soywiz.korge.view.Container
 import com.soywiz.korge.view.View
-import com.soywiz.korge.view.views
 import com.soywiz.korio.async.launch
-import com.soywiz.korio.async.runBlockingNoSuspensions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import render.RenderActionPlex
-import templates.Register
-import kotlin.time.ExperimentalTime
+
+
+//TODO: route debug info to logInfoChannel
 
 object GlobalChannel {
 

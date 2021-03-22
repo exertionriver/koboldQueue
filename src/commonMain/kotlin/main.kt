@@ -14,8 +14,6 @@ suspend fun main() = Korge(width = 1024, height = 1024) {
 
 	RenderActionPlex.lateInit(containerRoot)
 
-//	GlobalChannel.initLogInfoChannel()
-
 	val globalReg = Register(kInstanceName = "testGlobalRegister")
 
 	instantiate { template = Cave; kInstanceName = "spookyCave"; register = globalReg }

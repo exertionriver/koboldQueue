@@ -360,7 +360,7 @@ object RenderActionPlex {
 
         val checkTimer = Timer()
 
-        println("renderText: $renderText @ slot: $descriptionSlot")
+  //      println("renderText: $renderText @ slot: $descriptionSlot")
 
         descriptions[descriptionSlot++] = renderText
 

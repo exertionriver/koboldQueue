@@ -15,7 +15,7 @@ import action.roles.IObservable
 import com.soywiz.korio.util.UUID
 import condition.SimpleCondition
 import condition.SimpleCondition.Always
-import condition.SimpleCondition.FlowEq
+import condition.SimpleCondition.Eq
 import condition.SimpleCondition.Lte
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
@@ -83,7 +83,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
 
                 val conditionParamList = when (extendedAction) {
                     Instantiate -> SimpleCondition.fparams { first = instanceRegister.getNumKobolds(); second = flow { emit(3) } }
-                    Destantiate -> null //SimpleCondition.params { kInstance = koboldInstances[Random.nextInt(koboldInstances.size)]; register = instanceRegister }
+                    Destantiate -> null
                     else -> TODO("something else")
                 }
 
@@ -149,7 +149,7 @@ class Cave(private val id : UUID = UUID.randomUUID(), private val kInstanceName:
         override val actions: ActionConditionsMap
             get() = modOrSrcXorMap(
                 super.actions,
-                modMap = mapOf(Instantiate to listOf(FlowEq))
+                modMap = mapOf(Instantiate to listOf(Eq))
             )
 
     }

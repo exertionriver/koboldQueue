@@ -97,27 +97,6 @@ object SimpleCondition {
         }
     )
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
-    val FlowEq = Condition(conditionLabel = "simpleFlowEq"
-        , description = fun () : String = BinaryParamList(operator = "==").description()
-        , evaluator = fun (eqParams : ParamList?) : Boolean {
-            if (eqParams == null) return false
-
-            val checkTimer = Timer()
-            val firstVar = BinaryParamList(eqParams).first
-            println ("firstVar: $firstVar, ${checkTimer.getMillisecondsElapsed()}")
-
-            val secondVar = BinaryParamList(eqParams).second
-            println ("secondVar: $secondVar, ${checkTimer.getMillisecondsElapsed()}")
-
-            println (firstVar == secondVar)
-
-            return firstVar == secondVar
-        }
-    )
-
-
     val Neq = Condition(conditionLabel = "simpleNotEq"
         , description = fun () : String = BinaryParamList(operator = "!=").description()
         , evaluator = fun (eqParams : ParamList?) : Boolean? {

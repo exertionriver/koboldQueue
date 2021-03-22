@@ -2,10 +2,14 @@ package action.actions
 
 import ParamList
 import action.Action
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import param
 import templates.IInstance
 import templates.Register
+import kotlin.time.ExperimentalTime
 
+@ExperimentalCoroutinesApi
+@ExperimentalTime
 @ExperimentalUnsignedTypes
 object Destantiate : Action(actionLabel = "destantiate"
     , description = fun () : String = DestantiateParamList().destantiateDescription()

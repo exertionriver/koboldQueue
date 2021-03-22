@@ -43,6 +43,7 @@ inline fun <reified T: Any> ParamList.fparam(index : Int) : T {
 }
 
 typealias ParamList = List<Any>
+@ExperimentalUnsignedTypes
 typealias ActionConditionsMap = Map<Action, ConditionList?>
 
 typealias ActionDescription = () -> String
@@ -50,19 +51,7 @@ typealias ActionExecutor = (actionParams : ParamList?) -> String?
 typealias ConditionDescription = () -> String
 typealias ConditionEvaluator = (conditionParams : ParamList?) -> Boolean?
 
-typealias RegisterEntries = MutableMap<IInstance, Job>
-
-typealias ImRegisterEntries = Map<IInstance, Job>
-
-typealias RegisterData = Pair<UUID, ImRegisterEntries>
-
-@ExperimentalCoroutinesApi
-val registerChannel = Channel<RegisterData>(32)
-
-
-@ExperimentalUnsignedTypes
-//typealias RenderInstanceViewMap = MutableMap<View, UUID>
-
 typealias ConditionList = List<Condition>
 typealias ConditionParamMap = Map<Condition, ParamList?>
 
+typealias RegisterEntries = MutableMap<IInstance, Job>
