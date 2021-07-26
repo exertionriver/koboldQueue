@@ -15,5 +15,7 @@ Hope this may help you in your development work. - IanP
 
 Scenario: "You are a task-oriented fly on the wall of a spooky cave, observing the various behaviors of a rotating cast of kobolds.. some of them screech randomly, others appear to reflect upon their situation, and yet others appear to putter around a bit before leaving. Let's check in and see how your day is going.."
 
+v0.1 : basic actions, conditions, states, templates, rendering
+
 execution screenshot:
 ![koboldQueue_screenshot](https://user-images.githubusercontent.com/13192685/111932451-10139600-8a83-11eb-86fd-c29fbf8c3ee8.png)
