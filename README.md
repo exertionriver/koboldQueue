@@ -15,6 +15,8 @@ Hope this may help you in your development work. - IanP
 
 Scenario: "You are a task-oriented fly on the wall of a spooky cave, observing the various behaviors of a rotating cast of kobolds.. some of them screech randomly, others appear to reflect upon their situation, and yet others appear to putter around a bit before leaving. Let's check in and see how your day is going.."
 
+<b>v0.2 and beyond: Merged with koboldCave project as of koboldCave 0.8, now using libKTX with Ashley ECS. See: https://github.com/exertionriver/koboldCave</b>
+
 v0.1 : basic actions, conditions, states, templates, rendering
 
 execution screenshot:
